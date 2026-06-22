@@ -2,13 +2,13 @@ export const products = [
   // 1. T-Shirts (category: "T-Shirts")
   {
     id: 1,
-    name: "Oversized Tee / Mova Black",
+    name: "T-shirt Oversized / Mova Noir",
     category: "T-Shirts",
     price: "220 DH",
     numericPrice: 220,
     image: "/products/tshirts/4b5f9d6062ee114476ac8fafb0d9f19e.jpg",
     hoverImage: "/products/tshirts/53f851e84db92524c89aa56a93cd4171.jpg",
-    tag: "NEW",
+    tag: "NOUVEAU",
     collection: "legacy",
     sizes: [
       { size: "S", stock: 10 },
@@ -16,18 +16,18 @@ export const products = [
       { size: "L", stock: 8 },
       { size: "XL", stock: 4 }
     ],
-    description: "Premium heavy cotton oversized t-shirt in deep carbon black. Features a boxy street silhouette, dropped shoulders, and premium raw edge details.",
-    details: ["100% Cotton 280gsm", "Oversized boxy fit", "Ribbed crewneck", "Pre-shrunk finish"]
+    description: "T-shirt oversized premium en coton lourd noir. Coupe droite moderne, épaules tombantes et finitions soignées.",
+    details: ["100% Coton 280g/m²", "Coupe oversized boxy", "Col rond épais", "Prérétréci au lavage"]
   },
   {
     id: 2,
-    name: "Oversized Tee / Inspiration White",
+    name: "T-shirt Oversized / Inspiration Blanc",
     category: "T-Shirts",
     price: "220 DH",
     numericPrice: 220,
     image: "/products/tshirts/54109f437ad424782261735ce21a5508.jpg",
     hoverImage: "/products/tshirts/ab3e019f9efd706ae284e736096dbd84.jpg",
-    tag: "BESTSELLER",
+    tag: "POPULAIRE",
     collection: "legacy",
     sizes: [
       { size: "S", stock: 12 },
@@ -35,18 +35,18 @@ export const products = [
       { size: "L", stock: 10 },
       { size: "XL", stock: 5 }
     ],
-    description: "Premium heavyweight white oversized t-shirt. A clean streetwear essential with a perfect drape and drop shoulders.",
-    details: ["100% Premium Cotton", "Heavyweight 280gsm", "Thick neck ribbing", "Pre-shrunk finish"]
+    description: "T-shirt oversized premium blanc. Un essentiel du streetwear avec un tombé parfait w tissu lourd de qualité.",
+    details: ["100% Coton Premium", "Tissu lourd 280g/m²", "Col rond résistant", "Prérétréci au lavage"]
   },
   {
     id: 3,
-    name: "Oversized Tee / Stitch Noir",
+    name: "T-shirt Oversized / Stitch Noir",
     category: "T-Shirts",
     price: "250 DH",
     numericPrice: 250,
     image: "/products/tshirts/7867b390d8362cc9e17da155d63b3743.jpg",
     hoverImage: "/products/tshirts/df648bea0a2dc2837d80475b410b7849.jpg",
-    tag: "NEW",
+    tag: "NOUVEAU",
     collection: "nate",
     sizes: [
       { size: "S", stock: 6 },
@@ -54,18 +54,18 @@ export const products = [
       { size: "L", stock: 8 },
       { size: "XL", stock: 2 }
     ],
-    description: "Vintage-washed heavy cotton oversized t-shirt in acid wash black. Gives an authentic retro streetwear feel.",
-    details: ["Acid wash vintage finish", "Super heavy 300gsm cotton", "Distressed neck detailing", "Made in Morocco"]
+    description: "T-shirt oversized délavé effet vintage. Coton super lourd pour un style streetwear authentique et décontracté.",
+    details: ["Effet délavé vintage", "Coton super lourd 300g/m²", "Col légèrement usé", "Fabriqué au Maroc"]
   },
   {
     id: 4,
-    name: "Oversized Tee / Peace Black",
+    name: "T-shirt Oversized / Peace Noir",
     category: "T-Shirts",
     price: "220 DH",
     numericPrice: 220,
     image: "/products/tshirts/df648bea0a2dc2837d80475b410b7849.jpg",
     hoverImage: "/products/tshirts/4b5f9d6062ee114476ac8fafb0d9f19e.jpg",
-    tag: "NEW",
+    tag: "NOUVEAU",
     collection: "nate",
     sizes: [
       { size: "S", stock: 8 },
@@ -73,20 +73,20 @@ export const products = [
       { size: "L", stock: 12 },
       { size: "XL", stock: 6 }
     ],
-    description: "An essential oversized tee crafted from premium carded cotton. Perfect for layering in clean aesthetic fits.",
-    details: ["Off-white natural tone", "Premium carded cotton", "Drop shoulders layout", "Breathable street design"]
+    description: "T-shirt oversized basique fabriqué en coton peigné. Idéal pour un look quotidien simple et épuré.",
+    details: ["Coton peigné de qualité", "Épaules tombantes", "Coupe confortable", "Tissu respirant"]
   },
 
   // 2. Pants (category: "Pants")
   {
     id: 5,
-    name: "Heavy Utility Cargo / Khaki Sand",
+    name: "Cargo Utility / Sable Kaki",
     category: "Pants",
     price: "380 DH",
     numericPrice: 380,
-    image: "/prod_pants_cargo.png",
-    hoverImage: "/prod_pants_cargo.png",
-    tag: "NEW",
+    image: "/products/pants/15934233a307f7318bc0d5caf7d54942.jpg",
+    hoverImage: "/products/pants/1c1f9e5b6b21a5e15ebdb79bacb336c1.jpg",
+    tag: "NOUVEAU",
     collection: "legacy",
     sizes: [
       { size: "30", stock: 8 },
@@ -94,18 +94,18 @@ export const products = [
       { size: "34", stock: 10 },
       { size: "36", stock: 6 }
     ],
-    description: "Relaxed utility cargo pants in heavy sand cotton canvas. Features dual bellow side pockets, tactical straps, and adjustable cuffs.",
-    details: ["100% Cotton Canvas", "Relaxed fit cargo profile", "Adjustable ankle cuffs", "Multi-pocket tactical design"]
+    description: "Pantalon cargo en toile de coton lourde couleur sable. Poches latérales, sangles tactiques et chevilles ajustables.",
+    details: ["100% Toile de Coton", "Coupe cargo décontractée", "Chevilles ajustables", "Multiples poches pratiques"]
   },
   {
     id: 6,
-    name: "Wide Leg Cargo / Stealth Black",
+    name: "Cargo Wide Leg / Noir Stealth",
     category: "Pants",
     price: "390 DH",
     numericPrice: 390,
-    image: "/prod_pants_cargo.png",
-    hoverImage: "/prod_pants_cargo.png",
-    tag: "POPULAR",
+    image: "/products/pants/1eb216b1c2ec1c173d166372bff6d7e8.jpg",
+    hoverImage: "/products/pants/55886ac7ee238735db148f49ade9bc99.jpg",
+    tag: "POPULAIRE",
     collection: "legacy",
     sizes: [
       { size: "30", stock: 5 },
@@ -113,18 +113,18 @@ export const products = [
       { size: "34", stock: 12 },
       { size: "36", stock: 4 }
     ],
-    description: "Modern wide-leg street cargo pants in stealth black. Highly durable tactical construction with reinforced knee panels.",
-    details: ["Durable ripstop weave", "Wide leg street fit", "Reinforced knee joints", "Black hardware detailing"]
+    description: "Pantalon cargo large noir. Tissu ripstop ultra-résistant avec renforts aux genoux pour un style techwear moderne.",
+    details: ["Tissu Ripstop résistant", "Coupe large moderne", "Genoux renforcés", "Fermetures éclair noires"]
   },
   {
     id: 7,
-    name: "Relaxed Fit Cargo / Army Green",
+    name: "Cargo Relaxed / Vert Armée",
     category: "Pants",
     price: "380 DH",
     numericPrice: 380,
-    image: "/prod_pants_cargo.png",
-    hoverImage: "/prod_pants_cargo.png",
-    tag: "NEW",
+    image: "/products/pants/b9141202664b694e897810d741ee1316.jpg",
+    hoverImage: "/products/pants/fcfa9dfa90f6fcd926c4b05ea4796d74.jpg",
+    tag: "NOUVEAU",
     collection: "nate",
     sizes: [
       { size: "30", stock: 6 },
@@ -132,18 +132,18 @@ export const products = [
       { size: "34", stock: 12 },
       { size: "36", stock: 5 }
     ],
-    description: "Classic utility cargo trousers in authentic army green wash. Designed with comfortable elastic waistband adjustments.",
-    details: ["Vintage wash army green", "Adjustable comfort waist", "Deep tactical pockets", "Breathable cotton blend"]
+    description: "Pantalon cargo classique vert armée délavé. Taille élastique ajustable pour un confort maximal au quotidien.",
+    details: ["Vert armée délavé", "Taille élastique ajustable", "Poches cargo profondes", "Mélange coton respirant"]
   },
   {
     id: 8,
-    name: "Street Jogger Pants / Heather Gray",
+    name: "Jogger Street / Gris Chine",
     category: "Pants",
     price: "350 DH",
     numericPrice: 350,
-    image: "/prod_pants_cargo.png",
-    hoverImage: "/prod_pants_cargo.png",
-    tag: "BESTSELLER",
+    image: "/products/pants/fcfa9dfa90f6fcd926c4b05ea4796d74.jpg",
+    hoverImage: "/products/pants/15934233a307f7318bc0d5caf7d54942.jpg",
+    tag: "MEILLEURE VENTE",
     collection: "nate",
     sizes: [
       { size: "30", stock: 10 },
@@ -151,20 +151,20 @@ export const products = [
       { size: "34", stock: 8 },
       { size: "36", stock: 3 }
     ],
-    description: "Heavyweight loopback french terry jogger pants in clean heather gray. Tailored for comfort in daily streetwear fits.",
-    details: ["French terry heavy cotton", "Elastic drawstring waistband", "Ribbed ankle cuffs", "Stealth zipper side pockets"]
+    description: "Jogging molletonné lourd gris chine de haute qualité. Conçu pour le confort et le style streetwear quotidien.",
+    details: ["Molleton de coton lourd", "Taille élastique avec cordon", "Chevilles côtelées", "Poches zippées discrètes"]
   },
 
   // 3. Sneakers (category: "Sneakers")
   {
     id: 9,
-    name: "Retro Oversized Sneaker / Chalk White",
+    name: "Baskets Oversized / Blanc Craie",
     category: "Sneakers",
     price: "480 DH",
     numericPrice: 480,
-    image: "/prod_sneaker_white.png",
-    hoverImage: "/prod_sneaker_black.png",
-    tag: "POPULAR",
+    image: "/products/Shoes/145cd5f983da69b64148aa3999ac9a26.jpg",
+    hoverImage: "/products/Shoes/6905a0b3390db9910d509aeabb24714c.jpg",
+    tag: "POPULAIRE",
     collection: "legacy",
     sizes: [
       { size: "40", stock: 5 },
@@ -173,18 +173,18 @@ export const products = [
       { size: "43", stock: 9 },
       { size: "44", stock: 4 }
     ],
-    description: "Luxury oversized chunky sneakers in white and cream leather. Designed with a structured platform rubber outsole and high-density foam padding.",
-    details: ["Genuine leather panels", "Chunky platform sole", "Padded collar and tongue", "Made in Morocco"]
+    description: "Baskets épaisses de luxe en cuir blanc et crème. Semelle plateforme en caoutchouc et mousse intérieure haute densité.",
+    details: ["Empiècements en cuir véritable", "Semelle plateforme épaisse", "Languette et col rembourrés", "Fabriqué au Maroc"]
   },
   {
     id: 10,
-    name: "Bold Platform Sneaker / Matte Black",
+    name: "Baskets Platform / Noir Mat",
     category: "Sneakers",
     price: "480 DH",
     numericPrice: 480,
-    image: "/prod_sneaker_black.png",
-    hoverImage: "/prod_sneaker_white.png",
-    tag: "NEW",
+    image: "/products/Shoes/83087cf23b081640bd4dbff288598dc3.jpg",
+    hoverImage: "/products/Shoes/ab3d3f284e9577f8a8df83a0b599bb4f.jpg",
+    tag: "NOUVEAU",
     collection: "legacy",
     sizes: [
       { size: "40", stock: 4 },
@@ -193,18 +193,18 @@ export const products = [
       { size: "43", stock: 8 },
       { size: "44", stock: 3 }
     ],
-    description: "All-black premium leather platform sneakers. Exudes a bold dark streetwear aesthetic with high comfort orthotic inner soles.",
-    details: ["Stealth matte black finish", "Chunky durable rubber sole", "Breathable mesh lining", "Custom orthotic footbed"]
+    description: "Baskets à plateforme en cuir noir mat premium. Design sombre et épuré avec semelles intérieures confortables.",
+    details: ["Finition noir mat stealth", "Semelle en caoutchouc durable", "Doublure en mesh respirant", "Semelle intérieure confort"]
   },
   {
     id: 11,
-    name: "Luxury Runner Sneaker / Alabaster White",
+    name: "Baskets Luxury Runner / Blanc Albâtre",
     category: "Sneakers",
     price: "520 DH",
     numericPrice: 520,
-    image: "/prod_sneaker_white.png",
-    hoverImage: "/prod_sneaker_black.png",
-    tag: "POPULAR",
+    image: "/products/Shoes/6905a0b3390db9910d509aeabb24714c.jpg",
+    hoverImage: "/products/Shoes/145cd5f983da69b64148aa3999ac9a26.jpg",
+    tag: "POPULAIRE",
     collection: "nate",
     sizes: [
       { size: "40", stock: 3 },
@@ -213,18 +213,18 @@ export const products = [
       { size: "43", stock: 5 },
       { size: "44", stock: 2 }
     ],
-    description: "High-end luxury streetwear runners in clean alabaster white. Features premium leather overlays and custom branding details.",
-    details: ["Alabaster white leather panels", "Slightly distressed panels", "Ultra-cushioned midsole", "Custom dust bag included"]
+    description: "Baskets de course haut de gamme blanc albâtre. Cuir premium et finitions soignées.",
+    details: ["Empiècements cuir véritable", "Effet légèrement délavé", "Semelle intermédiaire amortissante", "Sac de rangement inclus"]
   },
   {
     id: 12,
-    name: "Urban Street Sneaker / Stealth Black",
+    name: "Baskets Urban Street / Noir Stealth",
     category: "Sneakers",
     price: "499 DH",
     numericPrice: 499,
-    image: "/prod_sneaker_black.png",
-    hoverImage: "/prod_sneaker_white.png",
-    tag: "NEW",
+    image: "/products/Shoes/ab3d3f284e9577f8a8df83a0b599bb4f.jpg",
+    hoverImage: "/products/Shoes/83087cf23b081640bd4dbff288598dc3.jpg",
+    tag: "NOUVEAU",
     collection: "nate",
     sizes: [
       { size: "40", stock: 4 },
@@ -233,65 +233,65 @@ export const products = [
       { size: "43", stock: 6 },
       { size: "44", stock: 3 }
     ],
-    description: "Chunky platform trainers in full stealth black. Melds industrial utility styling with modern streetwear profiles.",
-    details: ["Utility industrial profile", "Reinforced rubber platform", "High comfort padding", "Reflective detailing elements"]
+    description: "Baskets à plateforme épaisses noires. Style industriel moderne et grand confort au quotidien.",
+    details: ["Design industriel moderne", "Plateforme en caoutchouc renforcé", "Rembourrage grand confort", "Détails réfléchissants"]
   },
 
   // 4. Accessories (category: "Accessories")
   {
     id: 13,
-    name: "Vintage Washed Cap / Off-Black",
+    name: "Casquette Vintage / Noir Délavé",
     category: "Accessories",
     price: "150 DH",
     numericPrice: 150,
-    image: "/prod_acc_cap.png",
-    hoverImage: "/prod_acc_cap.png",
-    tag: "NEW",
+    image: "/products/accesoires/24c379891bd0e28d042dc1be2666d95e.jpg",
+    hoverImage: "/products/accesoires/4a129340e274be2960be95e0682d3630.jpg",
+    tag: "NOUVEAU",
     collection: "legacy",
-    sizes: [{ size: "OS", stock: 20 }],
-    description: "Classic 6-panel baseball cap crafted from vintage washed cotton twill. Adjustable clasp backing.",
-    details: ["100% Cotton Twill", "Vintage wash effect", "Adjustable metal clasp strap", "One size fits most"]
+    sizes: [{ size: "TU", stock: 20 }],
+    description: "Casquette classique à 6 panneaux en coton sergé délavé. Fermoir en métal ajustable à l'arrière.",
+    details: ["100% Coton Sergé", "Effet délavé vintage", "Attache métallique ajustable", "Taille unique"]
   },
   {
     id: 14,
-    name: "Street Baseball Cap / Carbon Gray",
+    name: "Casquette Street / Gris Carbone",
     category: "Accessories",
     price: "150 DH",
     numericPrice: 150,
-    image: "/prod_acc_cap.png",
-    hoverImage: "/prod_acc_cap.png",
-    tag: "POPULAR",
+    image: "/products/accesoires/99aa76dcfe44c48c4530a5f6a9bbb142.jpg",
+    hoverImage: "/products/accesoires/b1ad9a5a175b7f53c9e24979b13a9adb.jpg",
+    tag: "POPULAIRE",
     collection: "legacy",
-    sizes: [{ size: "OS", stock: 15 }],
-    description: "Heavy washed cotton grey baseball cap with minimalist street embroidery details.",
-    details: ["Heavy grey washed cotton", "Embroidered front details", "Adjustable strap closure", "One size fits most"]
+    sizes: [{ size: "TU", stock: 15 }],
+    description: "Casquette en coton lourd gris délavé avec une broderie minimaliste sur le devant.",
+    details: ["Coton lourd gris délavé", "Broderie minimaliste", "Fermeture réglable", "Taille unique"]
   },
   {
     id: 15,
-    name: "Classic Utility Cap / Sand Beige",
+    name: "Casquette Utility / Beige Sable",
     category: "Accessories",
     price: "160 DH",
     numericPrice: 160,
-    image: "/prod_acc_cap.png",
-    hoverImage: "/prod_acc_cap.png",
-    tag: "NEW",
+    image: "/products/accesoires/dcb481a8eff1b3ceb6b5b7a0e37d0da3.jpg",
+    hoverImage: "/products/accesoires/4a129340e274be2960be95e0682d3630.jpg",
+    tag: "NOUVEAU",
     collection: "nate",
-    sizes: [{ size: "OS", stock: 12 }],
-    description: "Tactical utility cap in sand beige wash. Designed with durable ripstop weaves.",
-    details: ["Ripstop utility cotton", "Tactical back adjustment strap", "Low profile design", "Earth tone styling"]
+    sizes: [{ size: "TU", stock: 12 }],
+    description: "Casquette tactique beige sable. Tissu ripstop léger et résistant.",
+    details: ["Coton Ripstop résistant", "Sangle de réglage tactique", "Design épuré", "Couleur terre naturelle"]
   },
   {
     id: 16,
-    name: "Retro Sports Cap / Forest Green",
+    name: "Casquette Retro / Vert Forêt",
     category: "Accessories",
     price: "150 DH",
     numericPrice: 150,
-    image: "/prod_acc_cap.png",
-    hoverImage: "/prod_acc_cap.png",
-    tag: "BESTSELLER",
+    image: "/products/accesoires/4a129340e274be2960be95e0682d3630.jpg",
+    hoverImage: "/products/accesoires/24c379891bd0e28d042dc1be2666d95e.jpg",
+    tag: "MEILLEURE VENTE",
     collection: "nate",
-    sizes: [{ size: "OS", stock: 18 }],
-    description: "Athletic-inspired retro twill sports cap in forest green. Vintage clasp backing.",
-    details: ["Retro collegiate styling", "Forest green washed cotton", "Breathable layout", "Adjustable strap closure"]
+    sizes: [{ size: "TU", stock: 18 }],
+    description: "Casquette rétro en coton sergé vert forêt. Fermoir en métal classique.",
+    details: ["Style rétro vintage", "Coton délavé vert forêt", "Tissu respirant", "Fermeture réglable"]
   }
 ];

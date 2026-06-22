@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useCart } from "../context/CartContext";
-import { Search, ShoppingBag, User, X, Menu } from "lucide-react";
+import { Search, ShoppingBag, User, X, Menu, Sun, Moon } from "lucide-react";
 import { products } from "../data/products";
 
-export default function Navbar({ onProductSelect, viewMode, setViewMode, setActiveFilter }) {
+export default function Navbar({ onProductSelect, viewMode, setViewMode, setActiveFilter, theme, setTheme }) {
   const { cartCount, openCart } = useCart();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -52,66 +52,66 @@ export default function Navbar({ onProductSelect, viewMode, setViewMode, setActi
       <header className={`header-glass flex align-center justify-between ${isScrolled ? "scrolled" : ""}`}>
         <div className="container flex align-center justify-between" style={{ height: "100%" }}>
           {/* Logo */}
-          <a href="#" className="footer-logo" onClick={handleHomeClick} style={{ color: "inherit", letterSpacing: "0.25em" }}>
-            REDMED
+          <a href="#" className="navbar-logo-link" onClick={handleHomeClick}>
+            <img src="/logo.png" alt="REDMED" className="navbar-logo-img" />
           </a>
 
           {/* Navigation Links (Desktop) */}
           <nav className="nav-links flex" style={{ gap: "2rem" }}>
             <button 
-              onClick={() => {
-                setViewMode("home");
-                const shopSec = document.getElementById("shop");
-                if (shopSec) shopSec.scrollIntoView({ behavior: "smooth" });
+              onClick={(e) => {
+                e.preventDefault();
+                window.location.hash = "#/";
               }}
               className={viewMode === "home" ? "active" : ""}
             >
-              Collections
+              Accueil
             </button>
             <button 
               onClick={() => {
-                setActiveFilter("T-Shirts");
-                setViewMode("catalog");
-                const shopSec = document.getElementById("shop");
-                if (shopSec) shopSec.scrollIntoView({ behavior: "smooth" });
+                setActiveFilter("All");
+                window.location.hash = "#/catalog";
               }}
+              className={viewMode === "catalog" ? "active" : ""}
             >
-              T-Shirts
+              Catalogue
             </button>
             <button 
               onClick={() => {
-                setActiveFilter("Pants");
-                setViewMode("catalog");
-                const shopSec = document.getElementById("shop");
-                if (shopSec) shopSec.scrollIntoView({ behavior: "smooth" });
+                window.location.hash = "#/categories";
               }}
+              className={viewMode === "categories" ? "active" : ""}
             >
-              Pants
+              Catégories
             </button>
             <button 
               onClick={() => {
-                setActiveFilter("Sneakers");
-                setViewMode("catalog");
-                const shopSec = document.getElementById("shop");
-                if (shopSec) shopSec.scrollIntoView({ behavior: "smooth" });
+                window.location.hash = "#/prints";
               }}
+              className={viewMode === "prints" ? "active" : ""}
             >
-              Sneakers
+              Prints
             </button>
             <button 
               onClick={() => {
-                setActiveFilter("Accessories");
-                setViewMode("catalog");
-                const shopSec = document.getElementById("shop");
-                if (shopSec) shopSec.scrollIntoView({ behavior: "smooth" });
+                window.location.hash = "#/contact";
               }}
+              className={viewMode === "contact" ? "active" : ""}
             >
-              Accessories
+              Contact
             </button>
           </nav>
 
           {/* Nav Icons */}
           <div className="nav-icons flex align-center" style={{ gap: "1rem" }}>
+            <button 
+              onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+              aria-label="Changer de thème"
+              style={{ color: "inherit", display: "flex", alignItems: "center" }}
+            >
+              {theme === "light" ? <Moon size={20} strokeWidth={1.5} /> : <Sun size={20} strokeWidth={1.5} />}
+            </button>
+
             <button 
               onClick={() => setIsSearchOpen(true)} 
               aria-label="Search products"
@@ -120,10 +120,6 @@ export default function Navbar({ onProductSelect, viewMode, setViewMode, setActi
               <Search size={20} strokeWidth={1.5} />
             </button>
             
-            <button aria-label="User account" style={{ color: "inherit" }}>
-              <User size={20} strokeWidth={1.5} />
-            </button>
-
             <button 
               onClick={openCart} 
               aria-label="Open shopping bag"
@@ -152,6 +148,13 @@ export default function Navbar({ onProductSelect, viewMode, setViewMode, setActi
           <div className="mobile-menu-drawer" onClick={(e) => e.stopPropagation()}>
             <div className="mobile-menu-header">
               <span className="mobile-menu-title">Menu</span>
+              <button 
+                onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+                aria-label="Changer de thème"
+                style={{ color: "inherit", marginLeft: "auto", marginRight: "1.5rem", display: "flex", alignItems: "center" }}
+              >
+                {theme === "light" ? <Moon size={20} strokeWidth={1.5} /> : <Sun size={20} strokeWidth={1.5} />}
+              </button>
               <button className="mobile-menu-close" onClick={() => setIsMobileMenuOpen(false)} aria-label="Close menu">
                 <X size={20} />
               </button>
@@ -159,57 +162,49 @@ export default function Navbar({ onProductSelect, viewMode, setViewMode, setActi
             <nav className="mobile-menu-links">
               <button 
                 onClick={() => {
-                  setViewMode("home");
+                  window.location.hash = "#/";
                   setIsMobileMenuOpen(false);
-                  const shopSec = document.getElementById("shop");
-                  if (shopSec) shopSec.scrollIntoView({ behavior: "smooth" });
                 }}
+                className={viewMode === "home" ? "active" : ""}
               >
-                Collections
+                Accueil
               </button>
               <button 
                 onClick={() => {
-                  setActiveFilter("T-Shirts");
-                  setViewMode("catalog");
+                  setActiveFilter("All");
+                  window.location.hash = "#/catalog";
                   setIsMobileMenuOpen(false);
-                  const shopSec = document.getElementById("shop");
-                  if (shopSec) shopSec.scrollIntoView({ behavior: "smooth" });
                 }}
+                className={viewMode === "catalog" ? "active" : ""}
               >
-                T-Shirts
+                Catalogue
               </button>
               <button 
                 onClick={() => {
-                  setActiveFilter("Pants");
-                  setViewMode("catalog");
+                  window.location.hash = "#/categories";
                   setIsMobileMenuOpen(false);
-                  const shopSec = document.getElementById("shop");
-                  if (shopSec) shopSec.scrollIntoView({ behavior: "smooth" });
                 }}
+                className={viewMode === "categories" ? "active" : ""}
               >
-                Pants
+                Catégories
               </button>
               <button 
                 onClick={() => {
-                  setActiveFilter("Sneakers");
-                  setViewMode("catalog");
+                  window.location.hash = "#/prints";
                   setIsMobileMenuOpen(false);
-                  const shopSec = document.getElementById("shop");
-                  if (shopSec) shopSec.scrollIntoView({ behavior: "smooth" });
                 }}
+                className={viewMode === "prints" ? "active" : ""}
               >
-                Sneakers
+                Prints
               </button>
               <button 
                 onClick={() => {
-                  setActiveFilter("Accessories");
-                  setViewMode("catalog");
+                  window.location.hash = "#/contact";
                   setIsMobileMenuOpen(false);
-                  const shopSec = document.getElementById("shop");
-                  if (shopSec) shopSec.scrollIntoView({ behavior: "smooth" });
                 }}
+                className={viewMode === "contact" ? "active" : ""}
               >
-                Accessories
+                Contact
               </button>
             </nav>
           </div>
@@ -221,14 +216,14 @@ export default function Navbar({ onProductSelect, viewMode, setViewMode, setActi
         <div className="search-overlay">
           <div className="search-container">
             <button className="search-close-btn" onClick={handleSearchClose}>
-              <X size={18} style={{ marginRight: "0.5rem" }} /> Close
+              <X size={18} style={{ marginRight: "0.5rem" }} /> Fermer
             </button>
             <div className="search-input-wrapper">
               <Search size={28} strokeWidth={1.5} />
               <input
                 type="text"
                 className="search-input"
-                placeholder="Search our apparel..."
+                placeholder="Rechercher un vêtement..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 autoFocus
@@ -270,7 +265,7 @@ export default function Navbar({ onProductSelect, viewMode, setViewMode, setActi
             
             {searchQuery.trim() !== "" && searchResults.length === 0 && (
               <div style={{ textAlign: "center", marginTop: "4rem", color: "var(--text-secondary)" }}>
-                No results found for "{searchQuery}"
+                Aucun résultat trouvé pour "{searchQuery}"
               </div>
             )}
           </div>

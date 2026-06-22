@@ -33,7 +33,7 @@ export default function QuickViewModal({ product, onClose }) {
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close button */}
-        <button className="modal-close-btn" onClick={onClose} aria-label="Close dialog">
+        <button className="modal-close-btn" onClick={onClose} aria-label="Fermer le dialogue">
           <X size={18} />
         </button>
 
@@ -73,7 +73,7 @@ export default function QuickViewModal({ product, onClose }) {
 
             {/* Sizing grid */}
             <div className="modal-sizes">
-              <h4 className="modal-section-title">Select Size</h4>
+              <h4 className="modal-section-title">Sélectionner la Taille</h4>
               <div className="modal-size-grid">
                 {product.sizes.map((sizeObj, idx) => {
                   const isOutOfStock = sizeObj.stock <= 0;
@@ -98,7 +98,7 @@ export default function QuickViewModal({ product, onClose }) {
               className="btn-pill btn-dark modal-add-btn"
               onClick={handleAddToCart}
             >
-              <ShoppingBag size={16} style={{ marginRight: "0.5rem" }} /> Add to Bag
+              <ShoppingBag size={16} style={{ marginRight: "0.5rem" }} /> Ajouter au Panier
             </button>
 
             {/* Accordion detail list */}
@@ -108,7 +108,7 @@ export default function QuickViewModal({ product, onClose }) {
                   className="modal-accordion-header" 
                   onClick={() => toggleSection("details")}
                 >
-                  <span>Details &amp; Care</span>
+                  <span>Détails &amp; Entretien</span>
                   {expandedSection === "details" ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                 </button>
                 {expandedSection === "details" && (
@@ -127,16 +127,16 @@ export default function QuickViewModal({ product, onClose }) {
                   className="modal-accordion-header" 
                   onClick={() => toggleSection("shipping")}
                 >
-                  <span>Shipping &amp; Returns</span>
+                  <span>Livraison &amp; Retours</span>
                   {expandedSection === "shipping" ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                 </button>
                 {expandedSection === "shipping" && (
                   <div className="modal-accordion-body">
                     <p style={{ marginBottom: "0.5rem" }}>
-                      <strong>Free standard delivery</strong> on orders over $200 AUD.
+                      <strong>Livraison standard gratuite</strong> pour toute commande supérieure à 200 DH.
                     </p>
                     <p>
-                      Returns are accepted within 30 days of purchase for exchange or store credit. Items must be in original unworn condition with tags attached.
+                      Les retours sont acceptés dans un délai de 30 jours pour échange ou avoir. Les articles doivent être dans leur état d'origine avec les étiquettes.
                     </p>
                   </div>
                 )}

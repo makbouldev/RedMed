@@ -15,7 +15,13 @@ export default function CartDrawer() {
   } = useCart();
 
   const [isCheckingOut, setIsCheckingOut] = useState(false);
-  const [checkoutStep, setCheckoutStep] = useState("cart"); // "cart" | "submitting" | "success"
+  const [checkoutStep, setCheckoutStep] = useState("cart"); // "cart" | "form" | "submitting" | "success"
+  const [formData, setFormData] = useState({
+    name: "",
+    phone: "",
+    city: "",
+    address: ""
+  });
 
   const FREE_SHIPPING_THRESHOLD = 200;
   const shippingCost = cartTotal >= FREE_SHIPPING_THRESHOLD ? 0 : 15;
@@ -25,16 +31,57 @@ export default function CartDrawer() {
   const remainingForFreeShipping = FREE_SHIPPING_THRESHOLD - cartTotal;
 
   const handleCheckout = () => {
+    setCheckoutStep("form");
+  };
+
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
     setIsCheckingOut(true);
     setCheckoutStep("submitting");
     
     // Simulate API call
     setTimeout(() => {
+      // Save order to localStorage
+      const savedOrders = localStorage.getItem("redmed_orders");
+      let ordersList = [];
+      if (savedOrders) {
+        try {
+          ordersList = JSON.parse(savedOrders);
+        } catch (e) {
+          console.error(e);
+        }
+      }
+      
+      const maxId = ordersList.length > 0 ? Math.max(...ordersList.map(o => parseInt(o.id) || 0)) : 8;
+      const orderId = String(maxId + 1);
+      
+      const newOrderObj = {
+        id: orderId,
+        customer: formData.name.trim(),
+        phone: formData.phone.trim(),
+        city: formData.city.trim(),
+        address: formData.address.trim(),
+        products: cartItems.map(item => ({
+          name: item.product.name,
+          quantity: item.quantity,
+          size: item.selectedSize || "TU",
+          color: "Noir", // default color
+          price: item.product.numericPrice
+        })),
+        price: grandTotal,
+        date: new Date().toISOString().split("T")[0],
+        payment: "Cash on Delivery",
+        status: "pending"
+      };
+      
+      ordersList = [newOrderObj, ...ordersList];
+      localStorage.setItem("redmed_orders", JSON.stringify(ordersList));
+      
       setCheckoutStep("success");
       setIsCheckingOut(false);
       clearCart();
-      addToast("Order placed successfully!");
-    }, 2500);
+      addToast("Commande enregistrée avec succès !");
+    }, 2000);
   };
 
   const handleClose = () => {
@@ -42,6 +89,12 @@ export default function CartDrawer() {
     // Reset checkout step on close after transition
     setTimeout(() => {
       setCheckoutStep("cart");
+      setFormData({
+        name: "",
+        phone: "",
+        city: "",
+        address: ""
+      });
     }, 500);
   };
 
@@ -55,8 +108,8 @@ export default function CartDrawer() {
       <div className={`cart-drawer ${isCartOpen ? "open" : ""}`}>
         {/* Header */}
         <div className="cart-header">
-          <h2 className="cart-title">Your Bag</h2>
-          <button className="cart-close-btn" onClick={handleClose} aria-label="Close cart">
+          <h2 className="cart-title">Votre Panier</h2>
+          <button className="cart-close-btn" onClick={handleClose} aria-label="Fermer le panier">
             <X size={20} />
           </button>
         </div>
@@ -69,10 +122,10 @@ export default function CartDrawer() {
                 <p className="cart-progress-text">
                   {remainingForFreeShipping > 0 ? (
                     <>
-                      You are <strong>${remainingForFreeShipping.toFixed(2)} AUD</strong> away from <strong>FREE SHIPPING</strong>.
+                      Il vous reste <strong>{remainingForFreeShipping} DH</strong> pour profiter de la <strong>LIVRAISON GRATUITE</strong>.
                     </>
                   ) : (
-                    "Congratulations! You qualify for FREE SHIPPING."
+                    "Félicitations ! Vous bénéficiez de la LIVRAISON GRATUITE."
                   )}
                 </p>
                 <div className="cart-progress-bar">
@@ -89,13 +142,13 @@ export default function CartDrawer() {
               {cartItems.length === 0 ? (
                 <div className="cart-empty-state">
                   <ShoppingBag size={48} strokeWidth={1} style={{ marginBottom: "1rem" }} />
-                  <p className="cart-empty-text">Your bag is currently empty.</p>
+                  <p className="cart-empty-text">Votre panier est actuellement vide.</p>
                   <button 
                     className="btn-pill btn-dark" 
                     onClick={handleClose}
                     style={{ marginTop: "1rem" }}
                   >
-                    Continue Shopping
+                    Continuer vos achats
                   </button>
                 </div>
               ) : (
@@ -111,7 +164,7 @@ export default function CartDrawer() {
                         <div className="cart-item-header">
                           <h4 className="cart-item-title">{item.product.name}</h4>
                         </div>
-                        <p className="cart-item-meta">Size: {item.selectedSize}</p>
+                        <p className="cart-item-meta">Taille : {item.selectedSize}</p>
                       </div>
 
                       <div className="cart-item-quantity-row">
@@ -137,12 +190,12 @@ export default function CartDrawer() {
                           className="cart-item-remove-btn"
                           onClick={() => removeFromCart(item.product.id, item.selectedSize)}
                         >
-                          Remove
+                          Retirer
                         </button>
                       </div>
 
                       <div style={{ textAlign: "right", marginTop: "0.25rem" }}>
-                        <span className="cart-item-price">${(item.product.numericPrice * item.quantity).toFixed(2)} AUD</span>
+                        <span className="cart-item-price">{(item.product.numericPrice * item.quantity)} DH</span>
                       </div>
                     </div>
                   </div>
@@ -154,31 +207,110 @@ export default function CartDrawer() {
             {cartItems.length > 0 && (
               <div className="cart-footer">
                 <div className="cart-summary-line">
-                  <span>Subtotal</span>
-                  <span>${cartTotal.toFixed(2)} AUD</span>
+                  <span>Sous-total</span>
+                  <span>{cartTotal} DH</span>
                 </div>
                 <div className="cart-summary-line">
-                  <span>Shipping</span>
-                  <span>{shippingCost === 0 ? "FREE" : `$${shippingCost.toFixed(2)} AUD`}</span>
+                  <span>Livraison</span>
+                  <span>{shippingCost === 0 ? "GRATUITE" : `${shippingCost} DH`}</span>
                 </div>
                 <div className="cart-summary-line total">
                   <span>Total</span>
-                  <span>${grandTotal.toFixed(2)} AUD</span>
+                  <span>{grandTotal} DH</span>
                 </div>
 
                 <button 
                   className="btn-pill btn-dark checkout-btn"
                   onClick={handleCheckout}
                 >
-                  <CreditCard size={16} style={{ marginRight: "0.5rem" }} /> Proceed to Checkout
+                  <CreditCard size={16} style={{ marginRight: "0.5rem" }} /> Passer la commande
                 </button>
                 
                 <p className="cart-disclaimer">
-                  Shipping, taxes, and discounts calculated at checkout.
+                  Frais de port et réductions calculés lors de la commande.
                 </p>
               </div>
             )}
           </>
+        )}
+
+        {checkoutStep === "form" && (
+          <div className="cart-checkout-form-container animate-fade-in" style={{ padding: "2rem", display: "flex", flexDirection: "column", gap: "1.5rem", height: "calc(100% - 75px)", overflowY: "auto" }}>
+            <h3 style={{ textTransform: "uppercase", fontSize: "0.95rem", letterSpacing: "0.1em", borderBottom: "1px solid var(--border-color)", paddingBottom: "0.75rem", marginBottom: "0.5rem", fontWeight: "700" }}>
+              Informations de Livraison
+            </h3>
+            
+            <form onSubmit={handleFormSubmit} style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+              <div className="form-input-group">
+                <label htmlFor="checkout-name" style={{ fontSize: "0.65rem", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-secondary)", marginBottom: "0.35rem" }}>
+                  Nom complet *
+                </label>
+                <input
+                  type="text"
+                  id="checkout-name"
+                  required
+                  placeholder="Votre nom et prénom"
+                  value={formData.name}
+                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  style={{ width: "100%", padding: "0.75rem 1rem", border: "1px solid var(--border-color)", borderRadius: "3px", backgroundColor: "var(--bg-primary)", color: "var(--text-primary)" }}
+                />
+              </div>
+
+              <div className="form-input-group">
+                <label htmlFor="checkout-phone" style={{ fontSize: "0.65rem", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-secondary)", marginBottom: "0.35rem" }}>
+                  Téléphone (WhatsApp) *
+                </label>
+                <input
+                  type="tel"
+                  id="checkout-phone"
+                  required
+                  placeholder="Ex: 0612345678"
+                  value={formData.phone}
+                  onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                  style={{ width: "100%", padding: "0.75rem 1rem", border: "1px solid var(--border-color)", borderRadius: "3px", backgroundColor: "var(--bg-primary)", color: "var(--text-primary)" }}
+                />
+              </div>
+
+              <div className="form-input-group">
+                <label htmlFor="checkout-city" style={{ fontSize: "0.65rem", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-secondary)", marginBottom: "0.35rem" }}>
+                  Ville *
+                </label>
+                <input
+                  type="text"
+                  id="checkout-city"
+                  required
+                  placeholder="Ex: Casablanca, Rabat, Marrakech..."
+                  value={formData.city}
+                  onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
+                  style={{ width: "100%", padding: "0.75rem 1rem", border: "1px solid var(--border-color)", borderRadius: "3px", backgroundColor: "var(--bg-primary)", color: "var(--text-primary)" }}
+                />
+              </div>
+
+              <div className="form-input-group">
+                <label htmlFor="checkout-address" style={{ fontSize: "0.65rem", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-secondary)", marginBottom: "0.35rem" }}>
+                  Adresse de livraison *
+                </label>
+                <textarea
+                  id="checkout-address"
+                  required
+                  rows="3"
+                  placeholder="Numéro de rue, quartier, appartement..."
+                  value={formData.address}
+                  onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+                  style={{ width: "100%", padding: "0.75rem 1rem", border: "1px solid var(--border-color)", borderRadius: "3px", backgroundColor: "var(--bg-primary)", color: "var(--text-primary)", resize: "none" }}
+                />
+              </div>
+
+              <div style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
+                <button type="submit" className="btn-pill btn-dark" style={{ width: "100%" }}>
+                  Confirmer ma commande
+                </button>
+                <button type="button" className="btn-pill btn-white" onClick={() => setCheckoutStep("cart")} style={{ width: "100%" }}>
+                  Retour au panier
+                </button>
+              </div>
+            </form>
+          </div>
         )}
 
         {checkoutStep === "submitting" && (
@@ -193,10 +325,10 @@ export default function CartDrawer() {
           }}>
             <div className="loading-spinner" />
             <h3 style={{ marginTop: "2rem", textTransform: "uppercase", fontSize: "1rem", letterSpacing: "0.1em" }}>
-              Securing Your Order
+              Validation de votre commande
             </h3>
             <p style={{ color: "var(--text-secondary)", fontSize: "0.8rem", marginTop: "0.5rem" }}>
-              Please do not close this window or refresh the page.
+              Veuillez patienter pendant que nous enregistrons vos détails de livraison.
             </p>
             
             <style dangerouslySetInnerHTML={{__html: `
@@ -240,19 +372,29 @@ export default function CartDrawer() {
               <Check size={36} />
             </div>
             
-            <h3 style={{ textTransform: "uppercase", fontSize: "1.2rem", letterSpacing: "0.15em", marginBottom: "1rem" }}>
-              Thank You!
+            <h3 style={{ textTransform: "uppercase", fontSize: "1.1rem", letterSpacing: "0.15em", marginBottom: "1rem", fontWeight: "700" }}>
+              Commande Validée !
             </h3>
-            <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", lineHeight: "1.6", maxHeight: "100px" }}>
-              Your order has been received. A confirmation email with details has been sent.
+            <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", lineHeight: "1.6", marginBottom: "1.5rem" }}>
+              Merci <strong>{formData.name}</strong> pour votre confiance !
             </p>
-            
+
+            <div style={{ background: "var(--bg-primary)", border: "1px solid var(--border-color)", borderRadius: "4px", padding: "1.25rem", marginBottom: "2rem", textAlign: "left", fontSize: "0.8rem", lineHeight: "1.5" }}>
+              <p style={{ color: "var(--text-primary)", fontWeight: "700", marginBottom: "0.5rem", textTransform: "uppercase", letterSpacing: "0.05em", fontSize: "0.75rem" }}>ℹ️ Prochaine étape :</p>
+              <p style={{ color: "var(--text-secondary)", marginBottom: "0.5rem" }}>
+                Notre service client va vous appeler dans les plus brefs délais sur votre numéro <strong>{formData.phone}</strong> afin de confirmer les détails.
+              </p>
+              <p style={{ color: "var(--text-secondary)" }}>
+                Votre colis sera expédié immédiatement après confirmation chez vous à <strong>{formData.city}</strong>.
+              </p>
+            </div>
+
             <button 
               className="btn-pill btn-dark" 
               onClick={handleClose}
-              style={{ marginTop: "2.5rem" }}
+              style={{ width: "100%" }}
             >
-              Continue Shopping
+              Continuer vos achats
             </button>
           </div>
         )}

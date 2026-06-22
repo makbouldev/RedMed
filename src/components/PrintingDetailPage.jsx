@@ -66,7 +66,7 @@ export default function PrintingDetailPage({ onClose }) {
             </p>
             <div className="printing-detail-hero-btns">
               <a
-                href="https://wa.me/212600000000"
+                href="https://wa.me/212709302757"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="printing-detail-whatsapp-btn"
@@ -128,7 +128,7 @@ export default function PrintingDetailPage({ onClose }) {
             </p>
             <div className="printing-upload-btns">
               <a
-                href="https://wa.me/212600000000"
+                href="https://wa.me/212709302757"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="printing-upload-btn-primary"
@@ -137,7 +137,7 @@ export default function PrintingDetailPage({ onClose }) {
                 WhatsApp — Envoyer mon design
               </a>
               <a
-                href="tel:+212600000000"
+                href="tel:+212709302757"
                 className="printing-upload-btn-secondary"
               >
                 <Phone size={16} />

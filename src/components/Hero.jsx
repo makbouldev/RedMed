@@ -4,21 +4,21 @@ import { ChevronRight } from "lucide-react";
 const slides = [
   {
     image: "/hero1.png",
-    title: "The Legacy Capsule",
-    subtitle: "REDMED ZR / FROM '08 'TIL INFINITY",
-    cta: "Shop The Capsule",
+    title: "Style Sans Limites",
+    subtitle: "REDMED ZR / LA COLLECTION ICONIQUE",
+    cta: "Découvrir la Collection",
     link: "#legacy-capsule"
   },
   {
     image: "/hero2.png",
-    title: "Nate Robinson Edit",
-    subtitle: "ZANEROBE & FRIENDS CO-OP",
-    cta: "Explore The Edit",
+    title: "L'Essence du Streetwear",
+    subtitle: "UN CONFORT ABSOLU AU QUOTIDIEN",
+    cta: "Explorer l'Édition",
     link: "#nates-edit"
   }
 ];
 
-export default function Hero() {
+export default function Hero({ onHeroCtaClick }) {
   const [currentSlide, setCurrentSlide] = useState(0);
 
   useEffect(() => {
@@ -52,9 +52,18 @@ export default function Hero() {
           {slides[currentSlide].title}
         </h1>
         <div className="animate-fade-in" style={{ animationDelay: "0.4s" }}>
-          <a href={slides[currentSlide].link} className="btn-pill btn-white">
+          <button 
+            onClick={(e) => {
+              e.preventDefault();
+              if (onHeroCtaClick) {
+                const collectionName = slides[currentSlide].link === "#legacy-capsule" ? "all" : "nate";
+                onHeroCtaClick(collectionName);
+              }
+            }} 
+            className="btn-pill btn-white"
+          >
             {slides[currentSlide].cta} <ChevronRight size={16} style={{ marginLeft: "0.5rem" }} />
-          </a>
+          </button>
         </div>
       </div>
 
@@ -81,7 +90,7 @@ export default function Hero() {
           if (shopSec) shopSec.scrollIntoView({ behavior: "smooth" });
         }}
       >
-        <span>Scroll Down</span>
+        <span>Défiler vers le bas</span>
         <div
           style={{
             width: "1px",

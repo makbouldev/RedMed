@@ -80,29 +80,6 @@ export default function ProductCard({ product, onQuickView }) {
           </>
         )}
 
-        {/* Hover Size Overlay Selector */}
-        <div className="product-size-overlay">
-          <span className="product-size-overlay-title">Quick Add to Bag</span>
-          <div className="size-selector-row">
-            {product.sizes.map((sizeObj, idx) => {
-              const isOutOfStock = sizeObj.stock <= 0;
-              return (
-                <button
-                  key={idx}
-                  className={`size-btn ${isOutOfStock ? "out-of-stock" : ""}`}
-                  disabled={isOutOfStock}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (!isOutOfStock) addToCart(product, sizeObj.size);
-                  }}
-                  title={isOutOfStock ? `${sizeObj.size} Out of stock` : `Add size ${sizeObj.size}`}
-                >
-                  {sizeObj.size}
-                </button>
-              );
-            })}
-          </div>
-        </div>
       </div>
 
       {/* Info */}

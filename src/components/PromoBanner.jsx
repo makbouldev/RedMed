@@ -19,12 +19,12 @@ export default function PromoBanner({ id, title, subtitle, designer, image, ctaL
         </h2>
         {designer && (
           <p style={{ fontSize: "0.75rem", color: "#cccccc", letterSpacing: "0.1em", marginBottom: "2rem" }}>
-            Captured by {designer}
+            Capturé par {designer}
           </p>
         )}
         <div>
           <a href={ctaLink} className="btn-pill btn-white">
-            Explore the Edit <ChevronRight size={14} style={{ marginLeft: "0.5rem" }} />
+            Découvrir la Sélection <ChevronRight size={14} style={{ marginLeft: "0.5rem" }} />
           </a>
         </div>
       </div>
