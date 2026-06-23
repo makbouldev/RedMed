@@ -4,7 +4,12 @@ import { X, ChevronDown, ChevronUp, ShoppingBag } from "lucide-react";
 
 export default function QuickViewModal({ product, onClose }) {
   const { addToCart } = useCart();
-  const [selectedSize, setSelectedSize] = useState("");
+  const [selectedSize, setSelectedSize] = useState(() => {
+    if (product.sizes && product.sizes.length === 1) {
+      return product.sizes[0].size;
+    }
+    return "";
+  });
   const [activeImage, setActiveImage] = useState(product.image);
   
   // Accordion state
@@ -45,22 +50,23 @@ export default function QuickViewModal({ product, onClose }) {
               alt={product.name} 
               className="modal-main-img"
             />
-            {product.hoverImage && (
-              <div className="modal-gallery-thumbs">
-                <img 
-                  src={product.image} 
-                  alt={`${product.name} default`} 
-                  className={`modal-thumb ${activeImage === product.image ? "active" : ""}`}
-                  onClick={() => setActiveImage(product.image)}
-                />
-                <img 
-                  src={product.hoverImage} 
-                  alt={`${product.name} detail view`} 
-                  className={`modal-thumb ${activeImage === product.hoverImage ? "active" : ""}`}
-                  onClick={() => setActiveImage(product.hoverImage)}
-                />
-              </div>
-            )}
+            {(() => {
+              const allImages = product.images || [product.image, product.hoverImage].filter(Boolean);
+              if (allImages.length <= 1) return null;
+              return (
+                <div className="modal-gallery-thumbs">
+                  {allImages.map((imgUrl, imgIdx) => (
+                    <img 
+                      key={imgIdx}
+                      src={imgUrl} 
+                      alt={`${product.name} thumbnail ${imgIdx}`} 
+                      className={`modal-thumb ${activeImage === imgUrl ? "active" : ""}`}
+                      onClick={() => setActiveImage(imgUrl)}
+                    />
+                  ))}
+                </div>
+              );
+            })()}
           </div>
 
           {/* Details Column */}
@@ -72,26 +78,28 @@ export default function QuickViewModal({ product, onClose }) {
             <p className="modal-desc">{product.description}</p>
 
             {/* Sizing grid */}
-            <div className="modal-sizes">
-              <h4 className="modal-section-title">Sélectionner la Taille</h4>
-              <div className="modal-size-grid">
-                {product.sizes.map((sizeObj, idx) => {
-                  const isOutOfStock = sizeObj.stock <= 0;
-                  const isSelected = selectedSize === sizeObj.size;
+            {!(product.sizes && product.sizes.length === 1 && product.sizes[0].size === "TU") && (
+              <div className="modal-sizes">
+                <h4 className="modal-section-title">Sélectionner la Taille</h4>
+                <div className="modal-size-grid">
+                  {product.sizes.map((sizeObj, idx) => {
+                    const isOutOfStock = sizeObj.stock <= 0;
+                    const isSelected = selectedSize === sizeObj.size;
 
-                  return (
-                    <button
-                      key={idx}
-                      className={`modal-size-btn ${isSelected ? "selected" : ""} ${isOutOfStock ? "disabled" : ""}`}
-                      onClick={() => !isOutOfStock && setSelectedSize(sizeObj.size)}
-                      disabled={isOutOfStock}
-                    >
-                      {sizeObj.size}
-                    </button>
-                  );
-                })}
+                    return (
+                      <button
+                        key={idx}
+                        className={`modal-size-btn ${isSelected ? "selected" : ""} ${isOutOfStock ? "disabled" : ""}`}
+                        onClick={() => !isOutOfStock && setSelectedSize(sizeObj.size)}
+                        disabled={isOutOfStock}
+                      >
+                        {sizeObj.size}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Add button */}
             <button 

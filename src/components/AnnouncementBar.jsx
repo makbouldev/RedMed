@@ -1,6 +1,8 @@
 import React from "react";
 
 export default function AnnouncementBar() {
+  const message = localStorage.getItem("redmed_announcement") || "LIVRAISON PARTOUT AU MAROC \u2014 35 DH";
+
   return (
     <div className="announcement-bar">
       <div className="container announcement-bar-container">
@@ -17,7 +19,7 @@ export default function AnnouncementBar() {
 
         {/* Center: Promo Message */}
         <div className="announcement-message">
-          LIVRAISON PARTOUT AU MAROC — 35 DH
+          {message}
         </div>
 
         {/* Right: Phone Number using inline SVG */}

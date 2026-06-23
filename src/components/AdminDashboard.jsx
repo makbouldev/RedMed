@@ -2,9 +2,10 @@ import React, { useState, useEffect } from "react";
 import { 
   BarChart3, ClipboardList, Package, Users, Settings, LogOut,
   Search, Bell, Calendar, ChevronDown, Plus, Download, MoreHorizontal,
-  Check, Clock, ArrowUpRight, CheckSquare, UserCheck, X, Trash2, Edit3, Save, Globe
+  Check, Clock, ArrowUpRight, CheckSquare, UserCheck, X, Trash2, Edit3, Save, Globe, Shield, Eye, EyeOff
 } from "lucide-react";
 import { products as initialProducts } from "../data/products";
+import AdminLogin from "./AdminLogin";
 import "./AdminDashboard.css";
 
 // Dynamic preset orders
@@ -136,6 +137,18 @@ const mockCustomers = [
 ];
 
 export default function AdminDashboard() {
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return sessionStorage.getItem("redmed_admin_auth") === "true";
+  });
+
+  if (!isAuthenticated) {
+    return <AdminLogin onLogin={() => setIsAuthenticated(true)} />;
+  }
+
+  return <AdminDashboardContent onLogout={() => { sessionStorage.removeItem("redmed_admin_auth"); setIsAuthenticated(false); }} />;
+}
+
+function AdminDashboardContent({ onLogout }) {
   const [activeTab, setActiveTab] = useState("dashboard"); // dashboard, orders, products, categories, settings
   const [orders, setOrders] = useState(() => {
     const saved = localStorage.getItem("redmed_orders");
@@ -206,6 +219,11 @@ export default function AdminDashboard() {
   const [newProductColors, setNewProductColors] = useState([]);
   const [newProductColorInput, setNewProductColorInput] = useState("");
   const [newProductStocks, setNewProductStocks] = useState({}); // key: `${size}__${color}` or `${size}` -> stock number
+  const [hasOptions, setHasOptions] = useState(false);
+  const [showColors, setShowColors] = useState(false);
+  const [showSizes, setShowSizes] = useState(false);
+  const [newProductImages, setNewProductImages] = useState([]);
+
 
   const SIZE_PRESETS = {
     clothing: ["S","M","L","XL","XXL"],
@@ -227,12 +245,16 @@ export default function AdminDashboard() {
 
   const resetAddProductModal = () => {
     setNewProduct({ name: "", price: "", category: "T-Shirts", image: "", description: "", details: "" });
-    setNewProductSizeType("clothing");
-    setNewProductSizes(["S","M","L","XL"]);
+    setNewProductSizeType("unique");
+    setNewProductSizes(["TU"]);
     setNewProductCustomSizeInput("");
     setNewProductColors([]);
     setNewProductColorInput("");
-    setNewProductStocks({});
+    setNewProductStocks({ "TU": 10 });
+    setHasOptions(false);
+    setShowColors(false);
+    setShowSizes(false);
+    setNewProductImages([]);
   };
 
   const [categoriesList, setCategoriesList] = useState(() => {
@@ -277,15 +299,86 @@ export default function AdminDashboard() {
   const [selectedProductQty, setSelectedProductQty] = useState(1);
 
   // Settings State
-  const [settings, setSettings] = useState({
-    storeName: "RedMed Casablanca",
-    email: "contact@redmed.ma",
-    currency: "DH",
-    freeShippingLimit: "500",
-    orderNotification: true,
-    maintenanceMode: false
+  const [settings, setSettings] = useState(() => {
+    const savedMsg = localStorage.getItem("redmed_announcement");
+    return {
+      storeName: "RedMed Casablanca",
+      email: "contact@redmed.ma",
+      currency: "DH",
+      freeShippingLimit: "500",
+      orderNotification: true,
+      maintenanceMode: false,
+      announcementMessage: savedMsg || "LIVRAISON PARTOUT AU MAROC \u2014 35 DH"
+    };
   });
 
+  // Security / password change state
+  const [securityForm, setSecurityForm] = useState({ currentPwd: "", newPwd: "", confirmPwd: "", newEmail: localStorage.getItem("redmed_admin_email") || "admin@redmed.ma" });
+  const [securityMsg, setSecurityMsg] = useState(null); // { type: 'success'|'error', text }
+  const [showSecPwds, setShowSecPwds] = useState({ current: false, new: false, confirm: false });
+
+  const handleChangeEmail = () => {
+    if (!securityForm.newEmail || !securityForm.newEmail.includes("@")) {
+      setSecurityMsg({ type: "error", text: "Veuillez entrer un e-mail valide." });
+      return;
+    }
+    localStorage.setItem("redmed_admin_email", securityForm.newEmail);
+    setSecurityMsg({ type: "success", text: "E-mail mis \u00e0 jour avec succ\u00e8s !" });
+    setTimeout(() => setSecurityMsg(null), 4000);
+  };
+
+  const handleChangePassword = () => {
+    const stored = localStorage.getItem("redmed_admin_password") || "redmed2024";
+    if (!securityForm.currentPwd || !securityForm.newPwd || !securityForm.confirmPwd) {
+      setSecurityMsg({ type: "error", text: "Veuillez remplir tous les champs." });
+      return;
+    }
+    if (securityForm.currentPwd !== stored) {
+      setSecurityMsg({ type: "error", text: "Mot de passe actuel incorrect." });
+      return;
+    }
+    if (securityForm.newPwd.length < 6) {
+      setSecurityMsg({ type: "error", text: "Le nouveau mot de passe doit contenir au moins 6 caract\u00e8res." });
+      return;
+    }
+    if (securityForm.newPwd !== securityForm.confirmPwd) {
+      setSecurityMsg({ type: "error", text: "Les mots de passe ne correspondent pas." });
+      return;
+    }
+    localStorage.setItem("redmed_admin_password", securityForm.newPwd);
+    setSecurityForm(prev => ({ ...prev, currentPwd: "", newPwd: "", confirmPwd: "" }));
+    setSecurityMsg({ type: "success", text: "Mot de passe mis \u00e0 jour avec succ\u00e8s !" });
+    setTimeout(() => setSecurityMsg(null), 4000);
+  };
+
+  // ─── Load data from PHP API on mount ───────────────────────────────────────
+  const API = "http://localhost/redmed-api/api";
+  const [apiConnected, setApiConnected] = useState(false);
+
+  useEffect(() => {
+    // Fetch orders from MySQL
+    fetch(`${API}/orders/index.php`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.success && data.data.length >= 0) {
+          setOrders(data.data);
+          setApiConnected(true);
+        }
+      })
+      .catch(() => console.log("API non disponible, utilisation localStorage"));
+
+    // Fetch products from MySQL
+    fetch(`${API}/products/index.php`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.success && data.data.length > 0) {
+          setProducts(data.data);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Sync orders to localStorage (backup)
   useEffect(() => {
     localStorage.setItem("redmed_orders", JSON.stringify(orders));
   }, [orders]);
@@ -297,6 +390,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     localStorage.setItem("redmed_products", JSON.stringify(products));
   }, [products]);
+
 
   // Sync editOrderProducts when editingOrder changes
   useEffect(() => {
@@ -327,11 +421,27 @@ export default function AdminDashboard() {
     }, 3000);
   };
 
+  // Notifications panel state
+  const [showNotifPanel, setShowNotifPanel] = useState(false);
+  const [seenOrderIds, setSeenOrderIds] = useState(() => {
+    const saved = localStorage.getItem("redmed_seen_orders");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const markAllSeen = () => {
+    const allIds = orders.map(o => o.id);
+    setSeenOrderIds(allIds);
+    localStorage.setItem("redmed_seen_orders", JSON.stringify(allIds));
+  };
+
+  const unseenOrders = orders.filter(o => !seenOrderIds.includes(o.id));
+
   // Close menus when clicking outside
   useEffect(() => {
     const handleOutsideClick = () => {
       setSelectedOrderId(null);
       setShowStatusDropdown(null);
+      setShowNotifPanel(false);
     };
     window.addEventListener("click", handleOutsideClick);
     return () => window.removeEventListener("click", handleOutsideClick);
@@ -576,7 +686,7 @@ export default function AdminDashboard() {
             className="admin-nav-item" 
             onClick={() => {
               if (window.confirm("Se déconnecter du panel administration ?")) {
-                window.location.hash = "#/";
+                onLogout();
               }
             }}
           >
@@ -617,9 +727,131 @@ export default function AdminDashboard() {
               {formatTodayDate()}
             </div>
 
-            <button className="admin-icon-btn" onClick={() => addToast("Aucune nouvelle notification")}>
-              <Bell size={18} />
-            </button>
+            <div style={{ position: "relative" }} onClick={(e) => e.stopPropagation()}>
+              <button
+                className="admin-icon-btn"
+                style={{ position: "relative" }}
+                onClick={() => setShowNotifPanel(prev => !prev)}
+              >
+                <Bell size={18} />
+                {unseenOrders.length > 0 && (
+                  <span style={{
+                    position: "absolute", top: "2px", right: "2px",
+                    background: "#ef4444", color: "#fff",
+                    borderRadius: "50%", width: "16px", height: "16px",
+                    fontSize: "10px", fontWeight: "700",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    lineHeight: 1, pointerEvents: "none"
+                  }}>
+                    {unseenOrders.length > 9 ? "9+" : unseenOrders.length}
+                  </span>
+                )}
+              </button>
+
+              {showNotifPanel && (
+                <div style={{
+                  position: "absolute", top: "calc(100% + 10px)", right: 0,
+                  width: "340px", background: "var(--admin-card-bg)",
+                  border: "1px solid var(--admin-border)", borderRadius: "16px",
+                  boxShadow: "0 8px 32px rgba(0,0,0,0.15)", zIndex: 999,
+                  overflow: "hidden"
+                }}>
+                  {/* Header */}
+                  <div style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                    padding: "1rem 1.25rem", borderBottom: "1px solid var(--admin-border)"
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <Bell size={16} />
+                      <span style={{ fontWeight: "700", fontSize: "0.9rem" }}>Notifications</span>
+                      {unseenOrders.length > 0 && (
+                        <span style={{
+                          background: "#ef4444", color: "#fff",
+                          borderRadius: "20px", padding: "1px 8px",
+                          fontSize: "0.7rem", fontWeight: "700"
+                        }}>{unseenOrders.length} nouveau{unseenOrders.length > 1 ? "x" : ""}</span>
+                      )}
+                    </div>
+                    {unseenOrders.length > 0 && (
+                      <button
+                        style={{ fontSize: "0.75rem", color: "var(--admin-accent)", fontWeight: "600", background: "none", border: "none", cursor: "pointer" }}
+                        onClick={markAllSeen}
+                      >
+                        Tout marquer lu
+                      </button>
+                    )}
+                  </div>
+
+                  {/* List */}
+                  <div style={{ maxHeight: "320px", overflowY: "auto" }}>
+                    {orders.length === 0 ? (
+                      <div style={{ padding: "2rem", textAlign: "center", color: "var(--admin-text-sub)", fontSize: "0.85rem" }}>
+                        Aucune commande pour l'instant
+                      </div>
+                    ) : (
+                      orders.slice(0, 10).map(order => {
+                        const isUnseen = !seenOrderIds.includes(order.id);
+                        const statusColor = order.status === "pending" ? "#f97316" : order.status === "confirmed" ? "#3b82f6" : order.status === "delivered" ? "#10b981" : "#ef4444";
+                        const statusLabel = order.status === "pending" ? "En attente" : order.status === "confirmed" ? "Confirm\u00e9e" : order.status === "delivered" ? "Livr\u00e9e" : "Annul\u00e9e";
+                        return (
+                          <div
+                            key={order.id}
+                            onClick={() => {
+                              setActiveTab("orders");
+                              setShowNotifPanel(false);
+                              markAllSeen();
+                            }}
+                            style={{
+                              display: "flex", alignItems: "flex-start", gap: "0.75rem",
+                              padding: "0.85rem 1.25rem",
+                              borderBottom: "1px solid var(--admin-border)",
+                              cursor: "pointer",
+                              background: isUnseen ? "rgba(99,102,241,0.06)" : "transparent",
+                              transition: "background 0.2s"
+                            }}
+                          >
+                            {/* Dot */}
+                            <div style={{
+                              width: "8px", height: "8px", borderRadius: "50%",
+                              background: isUnseen ? "#6366f1" : "transparent",
+                              flexShrink: 0, marginTop: "5px"
+                            }} />
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.5rem" }}>
+                                <span style={{ fontWeight: "700", fontSize: "0.85rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                  {order.customer}
+                                </span>
+                                <span style={{ fontSize: "0.75rem", fontWeight: "700", color: statusColor, flexShrink: 0 }}>
+                                  {statusLabel}
+                                </span>
+                              </div>
+                              <div style={{ fontSize: "0.78rem", color: "var(--admin-text-sub)", marginTop: "2px", display: "flex", gap: "0.5rem", justifyContent: "space-between" }}>
+                                <span>Commande #{order.id} • {order.price} DH</span>
+                                <span>{order.date}</span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  {/* Footer */}
+                  <div style={{ padding: "0.75rem 1.25rem", borderTop: "1px solid var(--admin-border)" }}>
+                    <button
+                      style={{
+                        width: "100%", padding: "0.6rem", borderRadius: "10px",
+                        background: "var(--admin-accent)", color: "#fff",
+                        border: "none", fontWeight: "700", fontSize: "0.82rem", cursor: "pointer"
+                      }}
+                      onClick={() => { setActiveTab("orders"); setShowNotifPanel(false); markAllSeen(); }}
+                    >
+                      Voir toutes les commandes
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
 
             <button className="admin-icon-btn" onClick={() => setActiveTab("settings")}>
               <Settings size={18} />
@@ -810,23 +1042,7 @@ export default function AdminDashboard() {
                   Exporter
                 </button>
 
-                <button 
-                  className="admin-btn primary" 
-                  onClick={() => {
-                    setNewOrderProducts([]);
-                    if (products.length > 0) {
-                      setSelectedProductIndex(0);
-                      const prod = products[0];
-                      setSelectedProductSize(prod.sizes && prod.sizes.length > 0 ? prod.sizes[0].size : "TU");
-                    }
-                    setSelectedProductColor("Noir");
-                    setSelectedProductQty(1);
-                    setShowAddOrderModal(true);
-                  }}
-                >
-                  <Plus size={16} />
-                  Ajouter commande
-                </button>
+
               </div>
             </div>
 
@@ -1139,19 +1355,23 @@ export default function AdminDashboard() {
               <button 
                 className="admin-btn primary"
                 onClick={() => {
+                  resetAddProductModal();
                   setNewProduct({
                     name: "",
                     price: "",
                     category: "T-Shirts",
                     image: "/prod_tee_black.png",
                     description: "Nouvel article streetwear RedMed.",
-                    details: "100% Coton premium\nCoupe moderne",
-                    stockS: 10,
-                    stockM: 10,
-                    stockL: 10,
-                    stockXL: 5,
-                    stockTU: 0
+                    details: "100% Coton premium\nCoupe moderne"
                   });
+                  setNewProductSizeType("unique");
+                  setNewProductSizes(["TU"]);
+                  setNewProductStocks({ "TU": 10 });
+                  setNewProductColors([]);
+                  setHasOptions(false);
+                  setShowColors(false);
+                  setShowSizes(false);
+                  setNewProductImages(["/prod_tee_black.png"]);
                   setShowAddProductModal(true);
                 }}
               >
@@ -1347,41 +1567,158 @@ export default function AdminDashboard() {
 
               <div className="admin-settings-row">
                 <div className="admin-settings-info">
-                  <h3>Notifications et Maintenance</h3>
-                  <p>Préférences d'alerte et activation du mode maintenance.</p>
+                  <h3>Bande d'annonce</h3>
+                  <p>Message affiché en haut du site (barre noire au-dessus de la navbar).</p>
                 </div>
                 <div className="admin-settings-inputs">
-                  <label style={{ display: "flex", alignItems: "center", gap: "0.75rem", fontSize: "0.85rem", fontWeight: "600", cursor: "pointer" }}>
+                  <div className="admin-form-group">
+                    <span className="admin-form-label">Message d'annonce</span>
                     <input 
-                      type="checkbox" 
-                      checked={settings.orderNotification}
-                      onChange={(e) => setSettings({ ...settings, orderNotification: e.target.checked })}
-                      style={{ width: "18px", height: "18px", accentColor: "var(--admin-accent)" }}
+                      type="text" 
+                      className="admin-form-input" 
+                      placeholder="Ex: LIVRAISON PARTOUT AU MAROC — 35 DH"
+                      value={settings.announcementMessage}
+                      onChange={(e) => setSettings({ ...settings, announcementMessage: e.target.value })}
                     />
-                    Alerte par mail à chaque nouvelle commande
-                  </label>
-
-                  <label style={{ display: "flex", alignItems: "center", gap: "0.75rem", fontSize: "0.85rem", fontWeight: "600", cursor: "pointer", marginTop: "0.5rem" }}>
-                    <input 
-                      type="checkbox" 
-                      checked={settings.maintenanceMode}
-                      onChange={(e) => setSettings({ ...settings, maintenanceMode: e.target.checked })}
-                      style={{ width: "18px", height: "18px", accentColor: "var(--admin-accent)" }}
-                    />
-                    Activer le mode maintenance
-                  </label>
+                  </div>
                 </div>
               </div>
+
+
 
               <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "1rem" }}>
                 <button 
                   className="admin-btn primary"
-                  onClick={() => addToast("Paramètres sauvegardés avec succès !")}
+                  onClick={() => {
+                    localStorage.setItem("redmed_announcement", settings.announcementMessage);
+                    addToast("Paramètres sauvegardés avec succès !");
+                  }}
                 >
                   <Save size={16} />
                   Sauvegarder les paramètres
                 </button>
               </div>
+
+              {/* Sécurité — Changer le mot de passe */}
+              <div className="admin-settings-row" style={{ borderTop: "2px solid var(--admin-border)", paddingTop: "1.5rem" }}>
+                <div className="admin-settings-info">
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.35rem" }}>
+                    <Shield size={16} style={{ color: "#6366f1" }} />
+                    <h3 style={{ margin: 0 }}>Sécurité</h3>
+                  </div>
+                  <p>Modifier les identifiants d'accès au panel administration.</p>
+                  <p style={{ fontSize: "0.75rem", color: "#f97316", marginTop: "0.25rem", fontWeight: "600" }}>
+                    Par défaut : admin@redmed.ma / redmed2024
+                  </p>
+                </div>
+                <div className="admin-settings-inputs">
+
+                  {/* Email section */}
+                  <div style={{ padding: "1rem", background: "rgba(99,102,241,0.06)", border: "1px solid rgba(99,102,241,0.15)", borderRadius: "12px", marginBottom: "1rem" }}>
+                    <span style={{ fontSize: "0.72rem", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--admin-text-sub)", display: "block", marginBottom: "0.75rem" }}>
+                      📧 Modifier l'e-mail de connexion
+                    </span>
+                    <div className="admin-form-group" style={{ marginBottom: "0.75rem" }}>
+                      <span className="admin-form-label">Nouvel e-mail</span>
+                      <input
+                        type="email"
+                        className="admin-form-input"
+                        placeholder="admin@redmed.ma"
+                        value={securityForm.newEmail}
+                        onChange={(e) => setSecurityForm({ ...securityForm, newEmail: e.target.value })}
+                      />
+                    </div>
+                    <button
+                      className="admin-btn secondary"
+                      onClick={handleChangeEmail}
+                      style={{ width: "100%" }}
+                    >
+                      <Save size={14} />
+                      Mettre à jour l'e-mail
+                    </button>
+                  </div>
+
+                  {/* Password section */}
+                  <div style={{ padding: "1rem", background: "rgba(99,102,241,0.06)", border: "1px solid rgba(99,102,241,0.15)", borderRadius: "12px" }}>
+                    <span style={{ fontSize: "0.72rem", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--admin-text-sub)", display: "block", marginBottom: "0.75rem" }}>
+                      🔑 Modifier le mot de passe
+                    </span>
+                  <div className="admin-form-group">
+                    <span className="admin-form-label">Mot de passe actuel</span>
+                    <div style={{ position: "relative" }}>
+                      <input
+                        type={showSecPwds.current ? "text" : "password"}
+                        className="admin-form-input"
+                        placeholder="Entrez le mot de passe actuel"
+                        value={securityForm.currentPwd}
+                        onChange={(e) => setSecurityForm({ ...securityForm, currentPwd: e.target.value })}
+                        style={{ paddingRight: "2.5rem" }}
+                      />
+                      <button type="button" onClick={() => setShowSecPwds(p => ({ ...p, current: !p.current }))}
+                        style={{ position: "absolute", right: "0.75rem", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--admin-text-sub)" }}>
+                        {showSecPwds.current ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="admin-form-group">
+                    <span className="admin-form-label">Nouveau mot de passe</span>
+                    <div style={{ position: "relative" }}>
+                      <input
+                        type={showSecPwds.new ? "text" : "password"}
+                        className="admin-form-input"
+                        placeholder="Minimum 6 caractères"
+                        value={securityForm.newPwd}
+                        onChange={(e) => setSecurityForm({ ...securityForm, newPwd: e.target.value })}
+                        style={{ paddingRight: "2.5rem" }}
+                      />
+                      <button type="button" onClick={() => setShowSecPwds(p => ({ ...p, new: !p.new }))}
+                        style={{ position: "absolute", right: "0.75rem", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--admin-text-sub)" }}>
+                        {showSecPwds.new ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="admin-form-group">
+                    <span className="admin-form-label">Confirmer le nouveau mot de passe</span>
+                    <div style={{ position: "relative" }}>
+                      <input
+                        type={showSecPwds.confirm ? "text" : "password"}
+                        className="admin-form-input"
+                        placeholder="Répétez le nouveau mot de passe"
+                        value={securityForm.confirmPwd}
+                        onChange={(e) => setSecurityForm({ ...securityForm, confirmPwd: e.target.value })}
+                        style={{ paddingRight: "2.5rem" }}
+                      />
+                      <button type="button" onClick={() => setShowSecPwds(p => ({ ...p, confirm: !p.confirm }))}
+                        style={{ position: "absolute", right: "0.75rem", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--admin-text-sub)" }}>
+                        {showSecPwds.confirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {securityMsg && (
+                    <div style={{
+                      padding: "0.7rem 1rem", borderRadius: "10px", fontSize: "0.82rem", fontWeight: "600",
+                      background: securityMsg.type === "success" ? "rgba(16,185,129,0.12)" : "rgba(239,68,68,0.12)",
+                      color: securityMsg.type === "success" ? "#10b981" : "#ef4444",
+                      border: `1px solid ${securityMsg.type === "success" ? "rgba(16,185,129,0.3)" : "rgba(239,68,68,0.3)"}`
+                    }}>
+                      {securityMsg.text}
+                    </div>
+                  )}
+
+                  <button
+                    className="admin-btn primary"
+                    onClick={handleChangePassword}
+                    style={{ marginTop: "0.25rem", background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}
+                  >
+                    <Shield size={15} />
+                    Mettre à jour le mot de passe
+                  </button>
+                  </div>{/* end password box */}
+                </div>{/* end settings-inputs */}
+              </div>{/* end settings-row */}
 
             </div>
 
@@ -1940,22 +2277,30 @@ export default function AdminDashboard() {
                 addToast("Veuillez renseigner le nom et le prix.");
                 return;
               }
-              if (newProductSizes.length === 0) {
-                addToast("Veuillez ajouter au moins une taille/option.");
+
+              const actualSizes = (hasOptions && showSizes) ? newProductSizes : ["TU"];
+              const actualColors = (hasOptions && showColors) ? newProductColors : [];
+
+              if (hasOptions && showSizes && actualSizes.length === 0) {
+                addToast("Veuillez ajouter au moins une taille/pointure.");
+                return;
+              }
+              if (hasOptions && showColors && actualColors.length === 0) {
+                addToast("Veuillez ajouter au moins une couleur.");
                 return;
               }
 
               // Build sizes array from dynamic state
               let sizes = [];
-              if (newProductColors.length > 0) {
-                newProductSizes.forEach(sz => {
-                  newProductColors.forEach(cl => {
+              if (actualColors.length > 0) {
+                actualSizes.forEach(sz => {
+                  actualColors.forEach(cl => {
                     const key = `${sz}__${cl}`;
                     sizes.push({ size: sz, color: cl, stock: parseInt(newProductStocks[key]) || 0 });
                   });
                 });
               } else {
-                newProductSizes.forEach(sz => {
+                actualSizes.forEach(sz => {
                   sizes.push({ size: sz, stock: parseInt(newProductStocks[sz]) || 0 });
                 });
               }
@@ -1967,9 +2312,11 @@ export default function AdminDashboard() {
                 category: newProduct.category,
                 price: `${newProduct.price} DH`,
                 numericPrice: parseFloat(newProduct.price),
-                image: newProduct.image || "/prod_tee_black.png",
+                image: newProductImages[0] || "/prod_tee_black.png",
+                hoverImage: newProductImages[1] || undefined,
+                images: newProductImages,
                 sizes: sizes,
-                colors: newProductColors.length > 0 ? newProductColors : undefined,
+                colors: actualColors.length > 0 ? actualColors : undefined,
                 description: newProduct.description,
                 details: newProduct.details ? newProduct.details.split("\n").filter(Boolean) : []
               };
@@ -2020,51 +2367,200 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="admin-form-group">
-                  <span className="admin-form-label">Photo de l'article</span>
+                  <span className="admin-form-label" style={{ fontWeight: "700" }}>Photos de l'article</span>
                   
-                  {/* Visual preview */}
-                  {newProduct.image && (
-                    <div style={{ display: "flex", gap: "1rem", alignItems: "center", marginBottom: "1rem", padding: "0.75rem", border: "1px dashed var(--admin-border)", borderRadius: "12px" }}>
-                      <img 
-                        src={newProduct.image} 
-                        alt="Aperçu" 
-                        style={{ width: "80px", height: "80px", borderRadius: "8px", objectFit: "cover" }} 
-                        onError={(e) => { e.target.src = "/prod_tee_black.png"; }}
-                      />
-                      <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-                        <span style={{ fontSize: "0.75rem", fontWeight: "700", color: "var(--admin-text-sub)" }}>Aperçu de la photo</span>
-                        <span style={{ fontSize: "0.65rem", color: "var(--admin-text-sub)", wordBreak: "break-all" }}>
-                          {newProduct.image.substring(0, 45) + (newProduct.image.length > 45 ? "..." : "")}
-                        </span>
-                      </div>
+                  {/* Selected images list */}
+                  {newProductImages.length > 0 ? (
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))", gap: "0.85rem", marginBottom: "1.25rem" }}>
+                      {newProductImages.map((imgUrl, imgIdx) => {
+                        const isMain = imgIdx === 0;
+                        const isHover = imgIdx === 1;
+                        return (
+                          <div 
+                            key={imgIdx} 
+                            style={{ 
+                              position: "relative", 
+                              border: isMain ? "2px solid #111" : "1px solid var(--admin-border)", 
+                              borderRadius: "12px", 
+                              padding: "0.4rem", 
+                              background: "#f9fafb",
+                              display: "flex",
+                              flexDirection: "column",
+                              alignItems: "center",
+                              gap: "0.35rem"
+                            }}
+                          >
+                            {/* Badges for roles */}
+                            <span 
+                              style={{ 
+                                fontSize: "0.62rem", 
+                                fontWeight: "800", 
+                                padding: "0.15rem 0.4rem", 
+                                borderRadius: "6px",
+                                background: isMain ? "#111" : isHover ? "rgba(99,102,241,0.12)" : "rgba(107,114,128,0.1)",
+                                color: isMain ? "#fff" : isHover ? "#6366f1" : "var(--admin-text-sub)",
+                                alignSelf: "stretch",
+                                textAlign: "center"
+                              }}
+                            >
+                              {isMain ? "★ Principale" : isHover ? "👁️ Hover" : `Image ${imgIdx + 1}`}
+                            </span>
+
+                            {/* Thumbnail image */}
+                            <img 
+                              src={imgUrl} 
+                              alt={`Aperçu ${imgIdx}`} 
+                              style={{ width: "100%", height: "80px", borderRadius: "8px", objectFit: "cover" }} 
+                              onError={(e) => { e.target.src = "/prod_tee_black.png"; }}
+                            />
+
+                            {/* Controls row */}
+                            <div style={{ display: "flex", gap: "0.25rem", width: "100%", justifyContent: "center" }}>
+                              {/* Move Left */}
+                              <button 
+                                type="button"
+                                disabled={imgIdx === 0}
+                                onClick={() => {
+                                  setNewProductImages(prev => {
+                                    const next = [...prev];
+                                    const tmp = next[imgIdx];
+                                    next[imgIdx] = next[imgIdx - 1];
+                                    next[imgIdx - 1] = tmp;
+                                    return next;
+                                  });
+                                }}
+                                style={{ 
+                                  padding: "0.2rem 0.4rem", 
+                                  borderRadius: "6px", 
+                                  border: "1px solid var(--admin-border)", 
+                                  background: "#fff", 
+                                  cursor: imgIdx === 0 ? "not-allowed" : "pointer",
+                                  fontSize: "0.7rem",
+                                  opacity: imgIdx === 0 ? 0.3 : 1
+                                }}
+                              >
+                                ←
+                              </button>
+
+                              {/* Delete */}
+                              <button 
+                                type="button"
+                                onClick={() => {
+                                  setNewProductImages(prev => prev.filter((_, idx) => idx !== imgIdx));
+                                }}
+                                style={{ 
+                                  padding: "0.2rem 0.4rem", 
+                                  borderRadius: "6px", 
+                                  border: "1px solid rgba(239,68,68,0.2)", 
+                                  background: "rgba(239,68,68,0.05)", 
+                                  color: "#ef4444",
+                                  cursor: "pointer",
+                                  fontSize: "0.7rem",
+                                  fontWeight: "700"
+                                }}
+                              >
+                                ×
+                              </button>
+
+                              {/* Move Right */}
+                              <button 
+                                type="button"
+                                disabled={imgIdx === newProductImages.length - 1}
+                                onClick={() => {
+                                  setNewProductImages(prev => {
+                                    const next = [...prev];
+                                    const tmp = next[imgIdx];
+                                    next[imgIdx] = next[imgIdx + 1];
+                                    next[imgIdx + 1] = tmp;
+                                    return next;
+                                  });
+                                }}
+                                style={{ 
+                                  padding: "0.2rem 0.4rem", 
+                                  borderRadius: "6px", 
+                                  border: "1px solid var(--admin-border)", 
+                                  background: "#fff", 
+                                  cursor: imgIdx === newProductImages.length - 1 ? "not-allowed" : "pointer",
+                                  fontSize: "0.7rem",
+                                  opacity: imgIdx === newProductImages.length - 1 ? 0.3 : 1
+                                }}
+                              >
+                                →
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div style={{ padding: "1.25rem", border: "1px dashed var(--admin-border)", borderRadius: "12px", textAlign: "center", color: "var(--admin-text-sub)", fontSize: "0.8rem", marginBottom: "1rem" }}>
+                      Aucune photo ajoutée. Le produit utilisera l'image par défaut.
                     </div>
                   )}
 
-                  <span className="admin-form-label">URL / Chemin de l'image</span>
-                  <input 
-                    type="text" 
-                    className="admin-form-input"
-                    value={newProduct.image}
-                    onChange={(e) => setNewProduct({ ...newProduct, image: e.target.value })}
-                  />
-                  
-                  <span className="admin-form-label" style={{ marginTop: "0.75rem" }}>Ou importer un fichier local</span>
-                  <input 
-                    type="file" 
-                    accept="image/*"
-                    className="admin-form-input"
-                    style={{ padding: "0.5rem" }}
-                    onChange={(e) => {
-                      const file = e.target.files[0];
-                      if (file) {
-                        const reader = new FileReader();
-                        reader.onloadend = () => {
-                          setNewProduct({ ...newProduct, image: reader.result });
-                        };
-                        reader.readAsDataURL(file);
-                      }
-                    }}
-                  />
+                  {/* Add Image Controls */}
+                  <div style={{ background: "#f9fafb", borderRadius: "12px", border: "1.5px solid var(--admin-border)", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                    <div>
+                      <span style={{ fontWeight: "700", fontSize: "0.8rem" }}>Ajouter une image</span>
+                      <div style={{ fontSize: "0.68rem", color: "var(--admin-text-sub)", marginTop: "0.15rem" }}>Importez un fichier local ou saisissez un lien URL.</div>
+                    </div>
+                    
+                    {/* URL Input */}
+                    <div style={{ display: "flex", gap: "0.4rem" }}>
+                      <input 
+                        type="text" 
+                        id="new-img-url-input"
+                        placeholder="Entrer le lien de la photo (Ex: /products/tee.jpg)..." 
+                        className="admin-form-input" 
+                        style={{ flex: 1, padding: "0.35rem 0.6rem", fontSize: "0.82rem" }} 
+                        onKeyDown={e => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            const val = e.target.value.trim();
+                            if (val) {
+                              setNewProductImages(prev => [...prev, val]);
+                              e.target.value = "";
+                            }
+                          }
+                        }}
+                      />
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          const el = document.getElementById("new-img-url-input");
+                          const val = el ? el.value.trim() : "";
+                          if (val) {
+                            setNewProductImages(prev => [...prev, val]);
+                            el.value = "";
+                          }
+                        }}
+                        style={{ padding: "0.35rem 0.85rem", borderRadius: "8px", background: "#111", color: "#fff", border: "none", fontWeight: "700", fontSize: "0.8rem", cursor: "pointer" }}
+                      >
+                        Ajouter
+                      </button>
+                    </div>
+
+                    {/* File Upload Input */}
+                    <div style={{ position: "relative" }}>
+                      <input 
+                        type="file" 
+                        accept="image/*"
+                        className="admin-form-input"
+                        style={{ padding: "0.35rem", fontSize: "0.8rem" }}
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              setNewProductImages(prev => [...prev, reader.result]);
+                            };
+                            reader.readAsDataURL(file);
+                            e.target.value = ""; // Reset
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <div className="admin-form-group">
@@ -2078,153 +2574,267 @@ export default function AdminDashboard() {
                   />
                 </div>
 
-                {/* ====== DYNAMIC OPTIONS BUILDER ====== */}
+                {/* ====== SIMPLE OPTIONS BUILDER ====== */}
                 <div className="admin-form-group">
-                  <span className="admin-form-label">Type de tailles / options</span>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginBottom: "0.5rem" }}>
-                    {[
-                      { key: "clothing", label: "👕 Vêtement", sub: "S · M · L · XL · XXL" },
-                      { key: "pants", label: "👖 Pantalon", sub: "30 · 32 · 34 · 36 · 38" },
-                      { key: "shoes", label: "👟 Pointures", sub: "38 → 45" },
-                      { key: "unique", label: "🏷️ Taille Unique", sub: "TU" },
-                      { key: "custom", label: "✏️ Personnalisé", sub: "Tu choisis" }
-                    ].map(opt => (
-                      <button
-                        key={opt.key}
-                        type="button"
-                        onClick={() => handleSizeTypeChange(opt.key)}
-                        style={{
-                          padding: "0.5rem 0.85rem",
-                          borderRadius: "10px",
-                          border: newProductSizeType === opt.key ? "2px solid #111" : "1.5px solid var(--admin-border)",
-                          background: newProductSizeType === opt.key ? "#111" : "#fff",
-                          color: newProductSizeType === opt.key ? "#fff" : "var(--admin-text-main)",
-                          fontWeight: "700",
-                          fontSize: "0.78rem",
-                          cursor: "pointer",
-                          transition: "all 0.18s ease",
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "flex-start",
-                          gap: "0.1rem"
+                  <span className="admin-form-label">Options du produit</span>
+                  
+                  {/* Main Toggle Checkbox */}
+                  <div style={{ background: "#f9fafb", borderRadius: "12px", border: "1.5px solid var(--admin-border)", padding: "1rem", marginBottom: "0.85rem" }}>
+                    <label style={{ display: "flex", alignItems: "center", gap: "0.75rem", cursor: "pointer" }}>
+                      <input 
+                        type="checkbox"
+                        checked={hasOptions}
+                        onChange={e => {
+                          setHasOptions(e.target.checked);
+                          if (!e.target.checked) {
+                            // Single stock product defaults
+                            setNewProductSizes(["TU"]);
+                            setNewProductColors([]);
+                            setNewProductStocks({ "TU": 10 });
+                            setShowColors(false);
+                            setShowSizes(false);
+                          } else {
+                            // If checked, start empty and require choices
+                            setNewProductSizes([]);
+                            setNewProductColors([]);
+                            setNewProductStocks({});
+                          }
                         }}
-                      >
-                        <span>{opt.label}</span>
-                        <span style={{ fontSize: "0.67rem", opacity: 0.65, fontWeight: "500" }}>{opt.sub}</span>
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Sizes chips display & toggle */}
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", marginBottom: "0.5rem", padding: "0.6rem", background: "#f9fafb", borderRadius: "10px", border: "1px solid var(--admin-border)" }}>
-                    {newProductSizes.map(sz => (
-                      <span
-                        key={sz}
-                        style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem", background: "#111", color: "#fff", borderRadius: "8px", padding: "0.25rem 0.6rem", fontSize: "0.8rem", fontWeight: "700" }}
-                      >
-                        {sz}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setNewProductSizes(prev => prev.filter(s => s !== sz));
-                            setNewProductStocks(prev => { const next = {...prev}; Object.keys(next).filter(k => k === sz || k.startsWith(sz+"__")).forEach(k => delete next[k]); return next; });
-                          }}
-                          style={{ background: "none", border: "none", color: "#fff", cursor: "pointer", padding: 0, lineHeight: 1, opacity: 0.7 }}
-                        >×</button>
-                      </span>
-                    ))}
-                    {newProductSizeType === "custom" && (
-                      <div style={{ display: "flex", gap: "0.4rem", alignItems: "center" }}>
-                        <input
-                          type="text"
-                          value={newProductCustomSizeInput}
-                          onChange={e => setNewProductCustomSizeInput(e.target.value)}
-                          onKeyDown={e => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                              const val = newProductCustomSizeInput.trim().toUpperCase();
-                              if (val && !newProductSizes.includes(val)) {
-                                setNewProductSizes(prev => [...prev, val]);
-                              }
-                              setNewProductCustomSizeInput("");
-                            }
-                          }}
-                          placeholder="Ajouter (Entrée)"
-                          style={{ width: "110px", padding: "0.3rem 0.6rem", borderRadius: "8px", border: "1.5px solid var(--admin-border)", fontSize: "0.8rem" }}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const val = newProductCustomSizeInput.trim().toUpperCase();
-                            if (val && !newProductSizes.includes(val)) setNewProductSizes(prev => [...prev, val]);
-                            setNewProductCustomSizeInput("");
-                          }}
-                          style={{ padding: "0.3rem 0.6rem", borderRadius: "8px", background: "#111", color: "#fff", border: "none", fontWeight: "700", fontSize: "0.78rem", cursor: "pointer" }}
-                        >+</button>
+                        style={{ width: "18px", height: "18px", accentColor: "#111", cursor: "pointer" }}
+                      />
+                      <div>
+                        <div style={{ fontWeight: "700", fontSize: "0.88rem" }}>Mon produit a des options (couleur, pointure/numéro, taille...)</div>
+                        <div style={{ fontSize: "0.72rem", color: "var(--admin-text-sub)" }}>Cochez pour ajouter des variations de couleurs, tailles ou pointures.</div>
                       </div>
-                    )}
-                    {newProductSizes.length === 0 && <span style={{ color: "var(--admin-text-sub)", fontSize: "0.78rem" }}>Aucune taille définie</span>}
+                    </label>
                   </div>
+
+                  {/* If hasOptions is FALSE: Show simple stock quantity input */}
+                  {!hasOptions && (
+                    <div style={{ padding: "1rem", background: "rgba(16,185,129,0.04)", borderRadius: "12px", border: "1.5px solid rgba(16,185,129,0.15)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div>
+                        <span style={{ fontWeight: "700", fontSize: "0.85rem", color: "var(--admin-text-main)" }}>Stock disponible (Quantité) *</span>
+                        <div style={{ fontSize: "0.72rem", color: "var(--admin-text-sub)", marginTop: "0.15rem" }}>Quantité totale en stock pour cet article.</div>
+                      </div>
+                      <input 
+                        type="number" 
+                        min="0" 
+                        value={newProductStocks["TU"] ?? 10}
+                        onChange={e => setNewProductStocks({ "TU": parseInt(e.target.value) || 0 })}
+                        className="admin-form-input"
+                        style={{ width: "100px", padding: "0.4rem 0.6rem", textAlign: "center", fontWeight: "700", fontSize: "1rem" }}
+                        required
+                      />
+                    </div>
+                  )}
+
+                  {/* If hasOptions is TRUE: Show options selectors */}
+                  {hasOptions && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
+                      
+                      {/* Checkbox: Mon produit a des couleurs */}
+                      <div style={{ background: "#f9fafb", borderRadius: "12px", border: "1.5px solid var(--admin-border)", overflow: "hidden" }}>
+                        <label style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.85rem 1rem", cursor: "pointer" }}>
+                          <input 
+                            type="checkbox"
+                            checked={showColors}
+                            onChange={e => {
+                              setShowColors(e.target.checked);
+                              if (!e.target.checked) {
+                                setNewProductColors([]);
+                                setNewProductColorInput("");
+                                setNewProductStocks(prev => {
+                                  // Remove any keys containing colors
+                                  const next = { ...prev };
+                                  Object.keys(next).forEach(k => {
+                                    if (k.includes("__")) delete next[k];
+                                  });
+                                  return next;
+                                });
+                              }
+                            }}
+                            style={{ width: "17px", height: "17px", accentColor: "#111", cursor: "pointer" }}
+                          />
+                          <div>
+                            <div style={{ fontWeight: "700", fontSize: "0.85rem" }}>Mon produit a des couleurs</div>
+                            <div style={{ fontSize: "0.72rem", color: "var(--admin-text-sub)" }}>Ajouter des variations de couleurs (ex: Noir, Blanc, Kaki...)</div>
+                          </div>
+                        </label>
+                        
+                        {showColors && (
+                          <div style={{ padding: "0 1rem 1rem 1rem", borderTop: "1px solid var(--admin-border)", background: "#fff" }}>
+                            {newProductColors.length > 0 && (
+                              <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", marginTop: "0.75rem", marginBottom: "0.5rem" }}>
+                                {newProductColors.map(cl => (
+                                  <span key={cl} style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem", background: "rgba(245,158,11,0.1)", color: "#b45309", border: "1px solid rgba(245,158,11,0.2)", borderRadius: "8px", padding: "0.22rem 0.6rem", fontSize: "0.78rem", fontWeight: "700" }}>
+                                    ● {cl}
+                                    <button 
+                                      type="button" 
+                                      onClick={() => {
+                                        setNewProductColors(p => p.filter(c => c !== cl));
+                                        setNewProductStocks(prev => {
+                                          const next = { ...prev };
+                                          Object.keys(next).filter(k => k.endsWith("__" + cl)).forEach(k => delete next[k]);
+                                          return next;
+                                        });
+                                      }}
+                                      style={{ background: "none", border: "none", color: "#b45309", cursor: "pointer", padding: 0, fontSize: "0.85rem", fontWeight: "700", marginLeft: "0.15rem", lineHeight: 1 }}
+                                    >×</button>
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                            <div style={{ display: "flex", gap: "0.4rem", marginTop: "0.75rem" }}>
+                              <input 
+                                type="text" 
+                                value={newProductColorInput}
+                                onChange={e => setNewProductColorInput(e.target.value)}
+                                onKeyDown={e => {
+                                  if (e.key === "Enter") {
+                                    e.preventDefault();
+                                    const v = newProductColorInput.trim();
+                                    if (v && !newProductColors.includes(v)) setNewProductColors(p => [...p, v]);
+                                    setNewProductColorInput("");
+                                  }
+                                }}
+                                placeholder="Ex: Noir, Blanc, Kaki..." 
+                                className="admin-form-input" 
+                                style={{ flex: 1, padding: "0.35rem 0.6rem", fontSize: "0.85rem" }} 
+                              />
+                              <button 
+                                type="button"
+                                onClick={() => {
+                                  const v = newProductColorInput.trim();
+                                  if (v && !newProductColors.includes(v)) setNewProductColors(p => [...p, v]);
+                                  setNewProductColorInput("");
+                                }}
+                                style={{ padding: "0 0.85rem", borderRadius: "8px", background: "#111", color: "#fff", border: "none", fontWeight: "700", fontSize: "0.8rem", cursor: "pointer" }}
+                              >+ Ajouter</button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Checkbox: Mon produit a des tailles / pointures */}
+                      <div style={{ background: "#f9fafb", borderRadius: "12px", border: "1.5px solid var(--admin-border)", overflow: "hidden" }}>
+                        <label style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.85rem 1rem", cursor: "pointer" }}>
+                          <input 
+                            type="checkbox"
+                            checked={showSizes}
+                            onChange={e => {
+                              setShowSizes(e.target.checked);
+                              if (!e.target.checked) {
+                                setNewProductSizes([]);
+                                setNewProductCustomSizeInput("");
+                                setNewProductStocks({});
+                              } else {
+                                // Default presets S, M, L, XL
+                                setNewProductSizes(["S", "M", "L", "XL"]);
+                              }
+                            }}
+                            style={{ width: "17px", height: "17px", accentColor: "#111", cursor: "pointer" }}
+                          />
+                          <div>
+                            <div style={{ fontWeight: "700", fontSize: "0.85rem" }}>Mon produit a des tailles / pointures / numéros</div>
+                            <div style={{ fontSize: "0.72rem", color: "var(--admin-text-sub)" }}>Ajouter des variations de tailles (ex: S, M, L...) ou pointures (ex: 39, 40...)</div>
+                          </div>
+                        </label>
+                        
+                        {showSizes && (
+                          <div style={{ padding: "0 1rem 1rem 1rem", borderTop: "1px solid var(--admin-border)", background: "#fff" }}>
+                            {/* Preset Buttons */}
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", marginTop: "0.75rem", marginBottom: "0.75rem" }}>
+                              {[
+                                { label: "👕 Vêtement", sizes: ["S", "M", "L", "XL", "XXL"] },
+                                { label: "👖 Pantalon", sizes: ["30", "32", "34", "36", "38"] },
+                                { label: "👟 Pointures", sizes: ["38", "39", "40", "41", "42", "43", "44", "45"] },
+                                { label: "🏷️ Unique", sizes: ["TU"] }
+                              ].map(preset => (
+                                <button 
+                                  key={preset.label} 
+                                  type="button"
+                                  onClick={() => { setNewProductSizes(preset.sizes); setNewProductStocks({}); }}
+                                  style={{ 
+                                    padding: "0.28rem 0.7rem", 
+                                    borderRadius: "8px", 
+                                    fontSize: "0.75rem", 
+                                    fontWeight: "600", 
+                                    cursor: "pointer",
+                                    border: JSON.stringify(newProductSizes) === JSON.stringify(preset.sizes) ? "1.5px solid #111" : "1.5px solid var(--admin-border)",
+                                    background: JSON.stringify(newProductSizes) === JSON.stringify(preset.sizes) ? "#111" : "#fff",
+                                    color: JSON.stringify(newProductSizes) === JSON.stringify(preset.sizes) ? "#fff" : "var(--admin-text-main)",
+                                    transition: "all 0.15s ease"
+                                  }}
+                                >
+                                  {preset.label}
+                                </button>
+                              ))}
+                            </div>
+
+                            {/* Current Size chips display */}
+                            {newProductSizes.length > 0 && (
+                              <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", marginBottom: "0.75rem" }}>
+                                {newProductSizes.map(sz => (
+                                  <span key={sz} style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem", background: "#111", color: "#fff", borderRadius: "8px", padding: "0.22rem 0.6rem", fontSize: "0.78rem", fontWeight: "700" }}>
+                                    {sz}
+                                    <button 
+                                      type="button" 
+                                      onClick={() => {
+                                        setNewProductSizes(p => p.filter(s => s !== sz));
+                                        setNewProductStocks(prev => {
+                                          const next = { ...prev };
+                                          Object.keys(next).filter(k => k === sz || k.startsWith(sz + "__")).forEach(k => delete next[k]);
+                                          return next;
+                                        });
+                                      }}
+                                      style={{ background: "none", border: "none", color: "#fff", cursor: "pointer", padding: 0, fontSize: "0.85rem", fontWeight: "700", marginLeft: "0.15rem", lineHeight: 1 }}
+                                    >×</button>
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* Add Custom size input */}
+                            <div style={{ display: "flex", gap: "0.4rem" }}>
+                              <input 
+                                type="text" 
+                                value={newProductCustomSizeInput}
+                                onChange={e => setNewProductCustomSizeInput(e.target.value)}
+                                onKeyDown={e => {
+                                  if (e.key === "Enter") {
+                                    e.preventDefault();
+                                    const v = newProductCustomSizeInput.trim().toUpperCase();
+                                    if (v && !newProductSizes.includes(v)) setNewProductSizes(p => [...p, v]);
+                                    setNewProductCustomSizeInput("");
+                                  }
+                                }}
+                                placeholder="Ajouter une taille (ex: XXL, 46...)" 
+                                style={{ flex: 1, padding: "0.35rem 0.6rem", border: "1.5px solid var(--admin-border)", borderRadius: "8px", fontSize: "0.85rem" }} 
+                              />
+                              <button 
+                                type="button"
+                                onClick={() => {
+                                  const v = newProductCustomSizeInput.trim().toUpperCase();
+                                  if (v && !newProductSizes.includes(v)) setNewProductSizes(p => [...p, v]);
+                                  setNewProductCustomSizeInput("");
+                                }}
+                                style={{ padding: "0.35rem 0.85rem", borderRadius: "8px", background: "#111", color: "#fff", border: "none", fontWeight: "700", cursor: "pointer" }}
+                              >+</button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                    </div>
+                  )}
                 </div>
 
-                {/* COLORS (optional) */}
-                <div className="admin-form-group">
-                  <span className="admin-form-label">Couleurs <span style={{ fontWeight: "400", fontSize: "0.75rem", color: "var(--admin-text-sub)" }}>(optionnel)</span></span>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", marginBottom: "0.5rem", padding: "0.6rem", background: "#f9fafb", borderRadius: "10px", border: "1px solid var(--admin-border)", minHeight: "42px" }}>
-                    {newProductColors.map(cl => (
-                      <span
-                        key={cl}
-                        style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem", background: "rgba(245,158,11,0.12)", color: "#b45309", border: "1.5px solid rgba(245,158,11,0.25)", borderRadius: "8px", padding: "0.25rem 0.6rem", fontSize: "0.8rem", fontWeight: "700" }}
-                      >
-                        ● {cl}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setNewProductColors(prev => prev.filter(c => c !== cl));
-                            setNewProductStocks(prev => { const next = {...prev}; Object.keys(next).filter(k => k.endsWith("__"+cl)).forEach(k => delete next[k]); return next; });
-                          }}
-                          style={{ background: "none", border: "none", color: "#b45309", cursor: "pointer", padding: 0, lineHeight: 1, opacity: 0.7 }}
-                        >×</button>
-                      </span>
-                    ))}
-                    {newProductColors.length === 0 && <span style={{ color: "var(--admin-text-sub)", fontSize: "0.78rem" }}>Pas de couleurs → stock par taille uniquement</span>}
-                  </div>
-                  <div style={{ display: "flex", gap: "0.5rem" }}>
-                    <input
-                      type="text"
-                      value={newProductColorInput}
-                      onChange={e => setNewProductColorInput(e.target.value)}
-                      onKeyDown={e => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          const val = newProductColorInput.trim();
-                          if (val && !newProductColors.includes(val)) setNewProductColors(prev => [...prev, val]);
-                          setNewProductColorInput("");
-                        }
-                      }}
-                      placeholder="Ex: Noir, Blanc, Kaki..."
-                      className="admin-form-input"
-                      style={{ flex: 1 }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const val = newProductColorInput.trim();
-                        if (val && !newProductColors.includes(val)) setNewProductColors(prev => [...prev, val]);
-                        setNewProductColorInput("");
-                      }}
-                      style={{ padding: "0 1rem", borderRadius: "10px", background: "#111", color: "#fff", border: "none", fontWeight: "700", cursor: "pointer", flexShrink: 0 }}
-                    >+ Ajouter</button>
-                  </div>
-                </div>
-
-                {/* STOCK PER OPTION */}
-                {newProductSizes.length > 0 && (
+                {/* ====== STOCK PER OPTION TABLE ====== */}
+                {hasOptions && (showSizes ? newProductSizes.length > 0 : true) && (showColors ? newProductColors.length > 0 : true) && (showSizes || showColors) && (
                   <div className="admin-form-group">
                     <span className="admin-form-label">Stock par option</span>
                     <div style={{ background: "#f9fafb", borderRadius: "12px", border: "1px solid var(--admin-border)", overflow: "hidden" }}>
-                      {newProductColors.length > 0 ? (
-                        // Stock per size × color combination
+                      {showColors && newProductColors.length > 0 ? (
                         <table style={{ width: "100%", borderCollapse: "collapse" }}>
                           <thead>
                             <tr style={{ background: "#f3f4f6" }}>
@@ -2235,19 +2845,19 @@ export default function AdminDashboard() {
                             </tr>
                           </thead>
                           <tbody>
-                            {newProductSizes.map((sz, si) => (
+                            {(showSizes ? newProductSizes : ["TU"]).map((sz, si) => (
                               <tr key={sz} style={{ background: si % 2 === 0 ? "#fff" : "#f9fafb" }}>
                                 <td style={{ padding: "0.5rem 0.75rem", fontWeight: "700", fontSize: "0.82rem", borderBottom: "1px solid #f0f0f0" }}>{sz}</td>
                                 {newProductColors.map(cl => {
                                   const key = `${sz}__${cl}`;
                                   return (
                                     <td key={cl} style={{ padding: "0.35rem 0.5rem", borderBottom: "1px solid #f0f0f0" }}>
-                                      <input
-                                        type="number"
-                                        min="0"
+                                      <input 
+                                        type="number" 
+                                        min="0" 
                                         value={newProductStocks[key] ?? 0}
                                         onChange={e => setNewProductStocks(prev => ({ ...prev, [key]: parseInt(e.target.value) || 0 }))}
-                                        style={{ width: "100%", padding: "0.3rem 0.5rem", border: "1.5px solid var(--admin-border)", borderRadius: "8px", fontSize: "0.85rem", textAlign: "center" }}
+                                        style={{ width: "100%", padding: "0.3rem 0.5rem", border: "1.5px solid var(--admin-border)", borderRadius: "8px", fontSize: "0.85rem", textAlign: "center" }} 
                                       />
                                     </td>
                                   );
@@ -2262,12 +2872,12 @@ export default function AdminDashboard() {
                           {newProductSizes.map(sz => (
                             <div key={sz} style={{ display: "flex", flexDirection: "column", gap: "0.3rem", alignItems: "center" }}>
                               <span style={{ fontSize: "0.8rem", fontWeight: "700", background: "#111", color: "#fff", borderRadius: "6px", padding: "0.2rem 0.6rem" }}>{sz}</span>
-                              <input
-                                type="number"
-                                min="0"
+                              <input 
+                                type="number" 
+                                min="0" 
                                 value={newProductStocks[sz] ?? 0}
                                 onChange={e => setNewProductStocks(prev => ({ ...prev, [sz]: parseInt(e.target.value) || 0 }))}
-                                style={{ width: "100%", padding: "0.35rem 0.5rem", border: "1.5px solid var(--admin-border)", borderRadius: "8px", fontSize: "0.9rem", textAlign: "center" }}
+                                style={{ width: "100%", padding: "0.35rem 0.5rem", border: "1.5px solid var(--admin-border)", borderRadius: "8px", fontSize: "0.9rem", textAlign: "center" }} 
                               />
                             </div>
                           ))}

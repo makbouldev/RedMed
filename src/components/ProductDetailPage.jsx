@@ -13,7 +13,11 @@ export default function ProductDetailPage({ product, onBack }) {
   // Keep active image in sync when product changes
   useEffect(() => {
     setActiveImage(product.image);
-    setSelectedSize("");
+    if (product.sizes && product.sizes.length === 1) {
+      setSelectedSize(product.sizes[0].size);
+    } else {
+      setSelectedSize("");
+    }
     setExpandedSection("details");
     window.scrollTo(0, 0);
   }, [product]);
@@ -88,22 +92,23 @@ export default function ProductDetailPage({ product, onBack }) {
               />
             </div>
             
-            {product.hoverImage && (
-              <div className="product-detail-thumbs">
-                <img 
-                  src={product.image} 
-                  alt={`${product.name} vue frontale`} 
-                  className={`product-detail-thumb-img ${activeImage === product.image ? "active" : ""}`}
-                  onClick={() => setActiveImage(product.image)}
-                />
-                <img 
-                  src={product.hoverImage} 
-                  alt={`${product.name} vue détail`} 
-                  className={`product-detail-thumb-img ${activeImage === product.hoverImage ? "active" : ""}`}
-                  onClick={() => setActiveImage(product.hoverImage)}
-                />
-              </div>
-            )}
+            {(() => {
+              const allImages = product.images || [product.image, product.hoverImage].filter(Boolean);
+              if (allImages.length <= 1) return null;
+              return (
+                <div className="product-detail-thumbs">
+                  {allImages.map((imgUrl, imgIdx) => (
+                    <img 
+                      key={imgIdx}
+                      src={imgUrl} 
+                      alt={`${product.name} vue ${imgIdx + 1}`} 
+                      className={`product-detail-thumb-img ${activeImage === imgUrl ? "active" : ""}`}
+                      onClick={() => setActiveImage(imgUrl)}
+                    />
+                  ))}
+                </div>
+              );
+            })()}
           </div>
 
           {/* Details & Actions Column */}
@@ -115,32 +120,34 @@ export default function ProductDetailPage({ product, onBack }) {
             <p className="product-detail-desc">{product.description}</p>
 
             {/* Sizing Grid */}
-            <div className="product-detail-sizes-section">
-              <div className="flex justify-between align-center" style={{ marginBottom: "0.75rem" }}>
-                <span className="product-detail-sizes-label">Choisir une Taille</span>
-                {selectedSize && (
-                  <span className="product-detail-selected-size">Taille sélectionnée : <strong>{selectedSize}</strong></span>
-                )}
-              </div>
-              <div className="product-detail-size-grid">
-                {product.sizes.map((sizeObj, idx) => {
-                  const isOutOfStock = sizeObj.stock <= 0;
-                  const isSelected = selectedSize === sizeObj.size;
+            {!(product.sizes && product.sizes.length === 1 && product.sizes[0].size === "TU") && (
+              <div className="product-detail-sizes-section">
+                <div className="flex justify-between align-center" style={{ marginBottom: "0.75rem" }}>
+                  <span className="product-detail-sizes-label">Choisir une Taille</span>
+                  {selectedSize && (
+                    <span className="product-detail-selected-size">Taille sélectionnée : <strong>{selectedSize}</strong></span>
+                  )}
+                </div>
+                <div className="product-detail-size-grid">
+                  {product.sizes.map((sizeObj, idx) => {
+                    const isOutOfStock = sizeObj.stock <= 0;
+                    const isSelected = selectedSize === sizeObj.size;
 
-                  return (
-                    <button
-                      key={idx}
-                      className={`product-detail-size-btn ${isSelected ? "selected" : ""} ${isOutOfStock ? "out-of-stock" : ""}`}
-                      onClick={() => !isOutOfStock && setSelectedSize(sizeObj.size)}
-                      disabled={isOutOfStock}
-                    >
-                      {sizeObj.size}
-                      {isOutOfStock && <span className="out-of-stock-diagonal"></span>}
-                    </button>
-                  );
-                })}
+                    return (
+                      <button
+                        key={idx}
+                        className={`product-detail-size-btn ${isSelected ? "selected" : ""} ${isOutOfStock ? "out-of-stock" : ""}`}
+                        onClick={() => !isOutOfStock && setSelectedSize(sizeObj.size)}
+                        disabled={isOutOfStock}
+                      >
+                        {sizeObj.size}
+                        {isOutOfStock && <span className="out-of-stock-diagonal"></span>}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Purchase CTA Actions */}
             <div className="product-detail-actions flex">
