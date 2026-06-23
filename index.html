@@ -5,6 +5,25 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>redmed</title>
+    <script>
+      (function() {
+        var path = window.location.pathname;
+        if (path === "/admin") {
+          window.location.replace("/#/admin");
+        } else if (path === "/prints") {
+          window.location.replace("/#/prints");
+        } else if (path === "/catalog") {
+          window.location.replace("/#/catalog");
+        } else if (path === "/categories") {
+          window.location.replace("/#/categories");
+        } else if (path === "/contact") {
+          window.location.replace("/#/contact");
+        } else if (path.indexOf("/product/") === 0) {
+          var prodId = path.substring(9);
+          window.location.replace("/#/product/" + prodId);
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
